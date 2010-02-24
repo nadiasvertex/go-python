@@ -10,18 +10,20 @@ var test_string = "import err"
 
 func TestPeek(t *testing.T) {
 	s, err := parser.Open("test_data/test1.py")
-	
+		
 	if err!=nil {		
-		t.Errorf("Open stream: %#v\n", err)
+		t.Errorf("Open stream: %+v\n", err)
 	}
+		
 	
 	b, err := s.Peek()
 	if err!=nil {
-		t.Errorf("Peek() error: %#v", err)
+		t.Logf("Stream: %s", s.DumpStreamContext());
+		t.Errorf("Peek() error: %+v", err)
 	}
 	
 	if tb, _ := utf8.DecodeRuneInString(test_string); b!=tb {		
-		t.Error("Expected to Peek() a(n) %#v", tb)
+		t.Errorf("Expected to Peek() a(n) %#v", tb)
 	}		
 }
 
