@@ -65,6 +65,9 @@ func TestMergeWithSplit(t *testing.T) {
 	// Merge new data
 	s.MergeFromString(test_merge_data, "my_test_data")
 	
+	t.Log("Trying to read merged data.")
+	
+	// Test that we can read the merged data.
 	for pos, tb := range test_merge_data {
 		b, err := s.Read()
 		
@@ -76,6 +79,22 @@ func TestMergeWithSplit(t *testing.T) {
 			t.Errorf("Expected to Read() a(n) %#v but read a(n) %#v at index %d", tb, b, pos)
 		}
 	}
+	
+	t.Log("Trying to read more of the previously tested data.")
+	
+	// Test that we drop back to the previous data.
+	for pos, tb := range test_string[5:] {
+		b, err := s.Read()
+		
+		if err!=nil {
+			t.Error("Read() error: %#v at index %d", err, pos)
+		}
+	
+		if b != tb {		
+			t.Errorf("Expected to Read() a(n) %#v but read a(n) %#v at index %d", tb, b, pos)
+		}
+	}
+	
 }
 
 
