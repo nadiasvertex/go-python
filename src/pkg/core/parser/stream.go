@@ -186,6 +186,9 @@ func (s *Stream) Read() (ch int, err os.Error) {
 		
 		s.cur = next
 		ctx   = s.cur.Value.(*context)
+		
+		// Increment as we would if we had just entered the Read() block.
+		ctx.at+=1
 	}
 	
 	if ctx.data[ctx.at]=='\n' {

@@ -7,6 +7,7 @@ import (
 )	
 
 var test_string = "import err"    
+var test_merge_data = "this and that"
 
 func TestPeek(t *testing.T) {
 	s, err := parser.Open("test_data/test1.py")
@@ -28,8 +29,7 @@ func TestPeek(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
-	
-	
+		
 	s, err := parser.Open("test_data/test1.py")
 	
 	if err!=nil {		
@@ -48,4 +48,34 @@ func TestRead(t *testing.T) {
 		}
 	}
 }
+
+func TestMergeWithSplit(t *testing.T) {
+		
+	s, err := parser.Open("test_data/test1.py")
+	
+	if err!=nil {		
+		t.Errorf("Open stream: %#v\n", err)
+	}	
+	
+	// Read some data.
+	for i := 0; i<5; i++ {
+		s.Read()	
+	}
+	
+	// Merge new data
+	s.MergeFromString(test_merge_data, "my_test_data")
+	
+	for pos, tb := range test_merge_data {
+		b, err := s.Read()
+		
+		if err!=nil {
+			t.Error("Read() error: %#v at index %d", err, pos)
+		}
+	
+		if b != tb {		
+			t.Errorf("Expected to Read() a(n) %#v but read a(n) %#v at index %d", tb, b, pos)
+		}
+	}
+}
+
 
