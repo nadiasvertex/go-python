@@ -24,6 +24,8 @@ type Stream struct {
 	
 	// The current context object.
 	cur     *list.Element;	
+	
+	
 }
 
 // Initializes a new stream object.
@@ -37,7 +39,7 @@ type context struct {
 	at       int
 	row      uint
 	col      uint
-	name     string
+	name     string	
 }
 
 // Initializes a new stream context object.
@@ -96,33 +98,37 @@ func (s *Stream) MergeFromString(data string, name string) {
 		return
 	}		
 	
-	// If our current stream is empty, insert
-	// a new stream onto the stack.  It will get
-	// switched to on the next Read() or Peek()
-	if s.cur==nil {
-		s.cur = s.streams.PushFront(newStreamContext(data, name))		
 	
-	} else {
+	switch s.cur {
+	// If our current context is empty, insert
+	// a new context onto the stack.  It will get
+	// switched to on the next Read() or Peek()
+	case nil:
+		s.cur = s.streams.PushFront(newStreamContext(data, name))				
+	
+	default:	
 		// Get the current context.
 		ctx := s.cur.Value.(* context)
-	
+
+		switch {	
 		// If the current stream is at the end, insert a new stream
 		// after it.	
-		if ctx.at >= len(ctx.data) {	
+		case ctx.at >= len(ctx.data):
 			s.streams.InsertAfter(newStreamContext(data, name), s.cur)
-	
-		// Split the current stream.  Insert the merge stream in the middle.	
-		} else {						
+
+		// Split the current stream.  Insert the merge stream 
+		// in the middle.	
+		default:						
 			merge_stream := newStreamContext(data, name)
-		
+	
 			// Insert a new stream object with the merged data after the current stream.
 			merge_stream_el := s.streams.InsertAfter(merge_stream, s.cur)
-		
+	
 			// Insert the split stream data after the merged stream.
 			if split_stream := splitStreamContext(ctx); split_stream!=nil && merge_stream_el!=nil {
 				s.streams.InsertAfter(split_stream, merge_stream_el)
 			}
-	  }					
+	  	}		
 	}   
 
 }
@@ -204,10 +210,34 @@ func (s *Stream) Read() (ch int, err os.Error) {
 	return
 }
 
-func (s *Stream) GetLoc() {
+// GetLoc returns the row and column of 
+// the read head for the Stream.  If the
+// Stream is empty, GetLoc will return 
+// 0,0.
+func (s *Stream) GetLoc() (uint, uint) {
+	if s==nil || s.cur == nil {
+		return 0, 0
+	}
+	
+	ctx := s.cur.Value.(*context)
+	
+	return ctx.row, ctx.col
 }
 
-func (s *Stream) SetLoc() {
+// SetLoc allows you to override the current
+// row and column locations in the Stream.  This
+// doesn't actually move the read head, it just
+// changes where the reported values from GetLoc
+// are.  
+func (s *Stream) SetLoc(row, col uint) {
+	if s==nil || s.cur == nil {
+		return
+	}
+	
+	ctx := s.cur.Value.(*context)
+	
+	ctx.row = row
+	ctx.col = col
 }
 
 func (s *Stream) GetMarker() {
