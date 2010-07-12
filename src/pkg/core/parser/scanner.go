@@ -105,18 +105,7 @@ type Scanner struct {
 
     // ErrorCount is incremented by one for each error encountered.
     ErrorCount int
-
-    // The Mode field controls which tokens are recognized. For instance,
-    // to recognize Ints, set the (1<<-Int) bit in Mode. The field may be
-    // changed at any time.
-    Mode uint
-
-    // The Whitespace field controls which characters are recognized
-    // as white space. To recognize a character ch <= ' ' as white space,
-    // set the ch'th bit in Whitespace (the Scanner's behavior is undefined
-    // for values ch > ' '). The field may be changed at any time.
-    Whitespace uint64
-
+        
     // Current token position. The Offset, Line, and Column fields
     // are set by Scan(); the Filename field is left untouched by the
     // Scanner.
@@ -148,9 +137,7 @@ func (s *Scanner) Init(src io.Reader) *Scanner {
     // initialize public fields
     s.Error = nil
     s.ErrorCount = 0
-    s.Mode = GoTokens
-    s.Whitespace = GoWhitespace
-
+    
     return s
 }
 
@@ -289,23 +276,21 @@ func (s *Scanner) scanNumber(ch int) (int, int) {
 				ch = s.next()
 				for isOctDigit(ch) {
 					ch = s.next()
-				}
-				return Integer, ch
+				}				
 			
 			case 'x', 'X':
 				ch = s.next()
 				for isHexDigit(ch) {
 					ch = s.next()
-				}
-				return Integer, ch
+				}				
 			
 			case 'b', 'B':
 				ch = s.next()
 				for isBinDigit(ch) {
 					ch = s.next()
 				}				
-				return Integer, ch
-		}
-	
+		}	
 	}
+	
+	return Integer, ch	
 }

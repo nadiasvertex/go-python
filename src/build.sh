@@ -2,4 +2,4 @@
 
 6g interp/*.go
 6g pkg/core/parser/*.go
-6l -o gopy *.6
+6l -o gopy gopy.6
