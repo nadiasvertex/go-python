@@ -302,23 +302,28 @@ func (s *Scanner) scanNumber(ch int) (int, int) {
 	if ch == '0' {
 		ch = s.next()
 		switch ch {
-			case 'o', 'O':
-				ch = s.next()
-				for isOctDigit(ch) {
-					ch = s.next()
-				}				
-			
+		    
+		    // Scan hex int
 			case 'x', 'X':
 				ch = s.next()
 				for isHexDigit(ch) {
 					ch = s.next()
 				}				
 			
+			// Scan binary int
 			case 'b', 'B':
 				ch = s.next()
 				for isBinDigit(ch) {
 					ch = s.next()
 				}
+			
+			// Scan dec int	
+		    default:
+		        ch = s.next()
+                for isOctDigit(ch) {
+                    ch = s.next()
+                }               
+            
 		}	
 	} else {
         // Decimal number	
