@@ -20,6 +20,10 @@
    The scanner, lexer, and parser are all implemented together for
    efficiency.  Much of the scanner was happily stolen from the Go scanner package
    and reworked to be specific to Python.
+   
+   In particular, this scanner completely re-implements the Scan() and scanXXXX() functions,
+   removes mode and configurable whitespace, tokenizes the newline character, and maintains
+   an indent/dedent stack - which also appear as tokens.
 */
 
 package parser
@@ -335,6 +339,38 @@ func (s *Scanner) scanNumber(ch int) (int, int) {
 	return Integer, ch	
 }
 
+func (s *Scanner) scanString(quote int) (n int) {
+    multiline := false
+    ch := s.next() // read character after quote
+    
+    // Handle multiline strings
+    if ch == quote && s.Peek() == quote {
+        multiline = true
+        ch = s.next()
+        ch = s.next()
+    }
+    for ch != quote {
+        if (!multiline && ch == '\n') || ch < 0 {
+            s.error("string literal not terminated")
+            return
+        }
+        if ch == '\\' {
+            ch = s.next() //s.scanEscape(quote)
+        } else {
+            ch = s.next()
+        }
+        n++
+    }
+    
+    if multiline {
+        ch = s.next()
+        ch = s.next()
+    }
+    
+    return
+}
+
+
 // Scan reads the next token or Unicode character from source and returns it.
 // It returns EOF at the end of the source. It reports scanner errors (read and
 // token errors) by calling s.Error, if set; otherwise it prints an error message
@@ -365,14 +401,31 @@ redo:
     // determine token value
     tok := ch
     switch {
-        case unicode.IsLetter(ch) || ch == '_':      
-            tok = Identifier
-            ch = s.scanIdentifier()
+        case unicode.IsLetter(ch) || ch == '_':
+            // Handle raw strings, which look like identifiers at the beginning.
+            if (ch == 'r' || ch=='u') && (s.Peek()=='"' || s.Peek()=='\'') {
+                s.scanString(s.next())
+                tok = String
+                ch = s.next()            
+            } else {                 
+                tok = Identifier
+                ch = s.scanIdentifier()
+            }
           
         case isDecDigit(ch):        
             tok, ch = s.scanNumber(ch)
+            
+        case ch == '\\' && (s.Peek()=='\r' || s.Peek() == '\n'):
+            // Handle explicit line joining.            
+            ch = s.next()
+            for ch =='\r' || ch == '\n' {
+                ch = s.next()
+            }
+            
+            goto redo
                 
         case ch == '\r' || ch == '\n':
+            // Handle end of line reporting
             tok = EOL
             if (ch=='\r' && s.Peek() == '\n') {
                 ch = s.next()
@@ -413,8 +466,12 @@ redo:
             
         default:
             switch ch {      
-            default:
-                ch = s.next()
+                case '"', '\'':
+                    s.scanString(ch)
+                    tok = String
+                    ch = s.next()
+                default:
+                    ch = s.next()
             }
     }
 

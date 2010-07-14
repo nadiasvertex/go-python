@@ -39,7 +39,13 @@ var tokenList = []token{
     token{Identifier, "print"},
     token{Identifier, "call_forward"},
     token{Identifier, "Parser5"},
-      
+    
+    token{String, "\"test\""},    
+    token{String, "'test2'"}, 
+    token{String, "\"\"\"test\nand\ntest\"\"\""},    
+    token{String, "'''test2\nand\ntest2'''"},
+    token{String, "r\"raw_test\""},     
+    token{String, "r'raw_test2'"},
 }
 
 func makeSource(pattern string) *bytes.Buffer {
