@@ -259,6 +259,14 @@ func isOctDigit(ch int) bool {
 	return false
 }
 
+func isDecDigit(ch int) bool {
+    switch ch {
+        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+            return true
+    }   
+    return false
+}
+
 func isHexDigit(ch int) bool {
 	switch ch {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'a', 'B', 'b', 'C', 'c', 'D', 'd', 'E', 'e', 'F', 'f':
@@ -291,6 +299,56 @@ func (s *Scanner) scanNumber(ch int) (int, int) {
 				}				
 		}	
 	}
-	
+		
 	return Integer, ch	
 }
+
+// Scan reads the next token or Unicode character from source and returns it.
+// It returns EOF at the end of the source. It reports scanner errors (read and
+// token errors) by calling s.Error, if set; otherwise it prints an error message
+// to os.Stderr.
+func (s *Scanner) Scan() int {
+    ch := s.ch
+
+    // reset token text position
+    s.tokPos = -1
+
+redo:
+    // skip white space
+    //for s.Whitespace&(1<<uint(ch)) != 0 {
+    //    ch = s.next()
+    //}
+
+    // start collecting token text
+    s.tokBuf.Reset()
+    s.tokPos = s.srcPos - 1
+
+    // set token position
+    s.Offset = s.srcBufOffset + s.tokPos
+    s.Line = s.line
+    s.Column = s.column
+
+    // determine token value
+    tok := ch
+    switch {
+    case unicode.IsLetter(ch) || ch == '_':      
+            tok = Identifier
+            ch = s.scanIdentifier()
+      
+    case isDecDigit(ch):        
+            tok, ch = s.scanNumber(ch)
+        
+    default:
+        switch ch {      
+        default:
+            ch = s.next()
+        }
+    }
+
+    // end of token text
+    s.tokEnd = s.srcPos - 1
+
+    s.ch = ch
+    return tok
+}
+
