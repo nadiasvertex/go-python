@@ -28,10 +28,13 @@ type token struct {
 }
 
 var tokenList = []token{
-    token{Integer, "0b11"},
-    token{Integer, "010"},
-    token{Integer, "19"},
-    token{Integer, "0xAc"},    
+    token{Integer, "0b10"},
+    token{Integer, "01234567"},
+    token{Integer, "1234567890"},
+    token{Integer, "0xabcdef0123456789FEDCBA"},  
+    
+    token{Indent, "  "},
+    token{Dedent, " "},  
 }
 
 func makeSource(pattern string) *bytes.Buffer {
@@ -42,13 +45,25 @@ func makeSource(pattern string) *bytes.Buffer {
     return &buf
 }
 
-func TestScanNumber(t *testing.T) {
+func TestScanTokens(t *testing.T) {
     s := new(Scanner).Init(makeSource("%s\n"))
     
     tok := s.Scan()        
     
-    if (tok!=Integer) {
-        t.Errorf("Expected an integer but got something else.")
-    }   
+    for _, k := range tokenList {
+        // Ignore EOL that happens after each scan.
+        if tok == EOL {
+            tok=s.Scan()
+        }
+                       
+        if tok != k.tok {
+            t.Fatalf("%d:%d Expected token type '%s' but got '%s' for '%s' (token text='%s')", s.line, s.column, tokenString[k.tok], tokenString[tok], k.text, s.TokenText())
+        } else if k.text != s.TokenText() {
+            t.Errorf("%d:%d Expected '%s' but got '%s' for token '%s'", s.line, s.column, k.text, s.TokenText(), tokenString[tok])
+        }        
+    
+        tok = s.Scan()    
+    }
+       
 }
 

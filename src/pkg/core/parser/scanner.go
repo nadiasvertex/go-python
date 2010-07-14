@@ -61,6 +61,7 @@ func (pos Position) String() string {
 
 const (
     EOF = -(iota + 1)
+    EOL 
     Indent
     Dedent
     Identifier
@@ -69,7 +70,22 @@ const (
     Float    
     Imaginary
     String
+    Comment
 )
+
+var tokenString = map[int]string{
+    EOF:        "EOF",
+    EOL:        "EOL",
+    Indent:     "Indent",
+    Dedent:     "Dedent",
+    Identifier: "Identifier",
+    Integer:    "Integer",
+    Float:      "Float",
+    Long:       "Long",
+    String:     "String",
+    Imaginary:  "Imaginary",
+    Comment:    "Comment",
+}
 
 const bufLen = 1024 // at least utf8.UTFMax
 
@@ -87,6 +103,11 @@ type Scanner struct {
     srcBufOffset int // byte offset of srcBuf[0] in source
     line         int // newline count + 1
     column       int // character count on line
+    
+    // Some state necessary for Python-esque token scanning
+    isNewline    bool     // if we just returned an EOL token, this is true.
+    indentStack [1024]int // the indent stack, keeps track of the various indent levels
+    indentPos   int       // the stack pointer for the indent. indicates top of stack.
 
     // Token text buffer
     // Typically, token text is stored completely in srcBuf, but in general
@@ -113,8 +134,7 @@ type Scanner struct {
 }
 
 // Init initializes a Scanner with a new source and returns itself.
-// Error is set to nil, ErrorCount is set to 0, Mode is set to GoTokens,
-// and Whitespace is set to GoWhitespace.
+// Error is set to nil, and ErrorCount is set to 0.
 func (s *Scanner) Init(src io.Reader) *Scanner {
     s.src = src
 
@@ -127,6 +147,10 @@ func (s *Scanner) Init(src io.Reader) *Scanner {
     s.srcBufOffset = 0
     s.line = 1
     s.column = 0
+    
+    // initialize indent tracker
+    s.isNewline = true
+    s.indentPos = 0
 
     // initialize token text buffer
     s.tokPos = -1
@@ -224,7 +248,6 @@ func (s *Scanner) Peek() int {
     return s.ch
 }
 
-
 func (s *Scanner) error(msg string) {
     s.ErrorCount++
     if s.Error != nil {
@@ -233,7 +256,6 @@ func (s *Scanner) error(msg string) {
     }
     fmt.Fprintf(os.Stderr, "%s: %s", s.Position, msg)
 }
-
 
 func (s *Scanner) scanIdentifier() int {
     ch := s.next() // read character after first '_' or letter
@@ -296,10 +318,15 @@ func (s *Scanner) scanNumber(ch int) (int, int) {
 				ch = s.next()
 				for isBinDigit(ch) {
 					ch = s.next()
-				}				
+				}
 		}	
-	}
-		
+	} else {
+        // Decimal number	
+        for isDecDigit(ch) {
+            ch = s.next()
+        }
+    }
+	
 	return Integer, ch	
 }
 
@@ -315,10 +342,12 @@ func (s *Scanner) Scan() int {
 
 redo:
     // skip white space
-    //for s.Whitespace&(1<<uint(ch)) != 0 {
-    //    ch = s.next()
-    //}
-
+    if !s.isNewline {
+        for ch == ' ' || ch == '\t' {
+            ch = s.next()
+        }
+    }
+    
     // start collecting token text
     s.tokBuf.Reset()
     s.tokPos = s.srcPos - 1
@@ -331,24 +360,105 @@ redo:
     // determine token value
     tok := ch
     switch {
-    case unicode.IsLetter(ch) || ch == '_':      
+        case unicode.IsLetter(ch) || ch == '_':      
             tok = Identifier
             ch = s.scanIdentifier()
-      
-    case isDecDigit(ch):        
+          
+        case isDecDigit(ch):        
             tok, ch = s.scanNumber(ch)
-        
-    default:
-        switch ch {      
-        default:
+                
+        case ch == '\r' || ch == '\n':
+            tok = EOL
+            if (ch=='\r' && s.Peek() == '\n') {
+                ch = s.next()
+            }
+            
             ch = s.next()
-        }
+            
+        case ch == ' ' || ch == '\t':
+            // handle indent / dedent    
+            indent_length := 0
+            for ch == ' ' || ch == '\t' {
+                switch ch {
+                    case  ' ': indent_length += 1                       // increase indent by 1
+                    case '\t': indent_length = ((indent_length/8)+1)*8  // pad indent to nearest multiple of 8 (Python lex spec rule.)
+                }
+                
+                ch = s.next()
+            }
+            
+            // Figure out if we should emit an indent, dedent, or
+            // nothing.  If the indentation level hasn't changed
+            // we ignore the whitespace.
+            switch {
+                case indent_length > s.indentStack[s.indentPos]: 
+                    tok = Indent
+                    s.indentPos++
+                    s.indentStack[s.indentPos] = indent_length
+                    
+                case indent_length < s.indentStack[s.indentPos]: 
+                    tok = Dedent
+                    s.indentPos++
+                    s.indentStack[s.indentPos] = indent_length                
+                    
+                default:
+                    goto redo            
+            }             
+                        
+            
+        default:
+            switch ch {      
+            default:
+                ch = s.next()
+            }
     }
 
-    // end of token text
+    // end of token textindent_length += 1
     s.tokEnd = s.srcPos - 1
+
+    // process newline
+    s.isNewline = (tok == EOL)    
 
     s.ch = ch
     return tok
 }
 
+// Position returns the current source position. If called before Next()
+// or Scan(), it returns the position of the next Unicode character or token
+// returned by these functions. If called afterwards, it returns the position
+// immediately after the last character of the most recent token or character
+// scanned.
+func (s *Scanner) Pos() Position {
+    return Position{
+        s.Filename,
+        s.srcBufOffset + s.srcPos - 1,
+        s.line,
+        s.column,
+    }
+}
+
+
+// TokenText returns the string corresponding to the most recently scanned token.
+// Valid after calling Scan().
+func (s *Scanner) TokenText() string {
+    if s.tokPos < 0 {
+        // no token text
+        return ""
+    }
+
+    if s.tokEnd < 0 {
+        // if EOF was reached, s.tokEnd is set to -1 (s.srcPos == 0)
+        s.tokEnd = s.tokPos
+    }
+
+    if s.tokBuf.Len() == 0 {
+        // common case: the entire token text is still in srcBuf
+        return string(s.srcBuf[s.tokPos:s.tokEnd])
+    }
+
+    // part of the token text was saved in tokBuf: save the rest in
+    // tokBuf as well and return its content
+    s.tokBuf.Write(s.srcBuf[s.tokPos:s.tokEnd])
+    s.tokPos = s.tokEnd // ensure idempotency of TokenText() call
+    return s.tokBuf.String()
+}
