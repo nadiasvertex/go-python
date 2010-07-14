@@ -34,7 +34,12 @@ var tokenList = []token{
     token{Integer, "0xabcdef0123456789FEDCBA"},  
     
     token{Indent, "  "},
-    token{Dedent, " "},  
+    token{Dedent, " "},
+    
+    token{Identifier, "print"},
+    token{Identifier, "call_forward"},
+    token{Identifier, "Parser5"},
+      
 }
 
 func makeSource(pattern string) *bytes.Buffer {
