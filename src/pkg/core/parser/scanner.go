@@ -261,8 +261,7 @@ func (s *Scanner) error(msg string) {
     fmt.Fprintf(os.Stderr, "%s: %s", s.Position, msg)
 }
 
-func (s *Scanner) scanIdentifier() int {
-    ch := s.next() // read character after first '_' or letter
+func (s *Scanner) scanIdentifier(ch int) int {    
     for ch == '_' || unicode.IsLetter(ch) || unicode.IsDigit(ch) {
         ch = s.next()
     }
@@ -401,21 +400,30 @@ redo:
     // determine token value
     tok := ch
     switch {
-        case unicode.IsLetter(ch) || ch == '_':
+        case unicode.IsLetter(ch) || ch == '_':            
+            scan_identifier := true
+            
             // Handle raw strings, which look like identifiers at the beginning.
-            if (ch == 'r' || ch=='u') && (s.Peek()=='"' || s.Peek()=='\'') {
-                s.scanString(s.next())
-                tok = String
-                ch = s.next()            
-            } else {                 
+            if (ch == 'r' || ch=='u') {
+                ch = s.next()
+                if ch == '"' || ch == '\'' {
+                    scan_identifier = false
+                    s.scanString(s.next())
+                    tok = String
+                    ch = s.next()
+                }
+            } 
+            
+            // Handle identifiers
+            if scan_identifier {                 
                 tok = Identifier
-                ch = s.scanIdentifier()
+                ch = s.scanIdentifier(ch)
             }
           
         case isDecDigit(ch):        
             tok, ch = s.scanNumber(ch)
             
-        case ch == '\\' && (s.Peek()=='\r' || s.Peek() == '\n'):
+        case ch == '\\':
             // Handle explicit line joining.            
             ch = s.next()
             for ch =='\r' || ch == '\n' {
@@ -427,9 +435,13 @@ redo:
         case ch == '\r' || ch == '\n':
             // Handle end of line reporting
             tok = EOL
-            if (ch=='\r' && s.Peek() == '\n') {
+            // Check for /r/n or just /r line endings
+            if ch=='\r' {
                 ch = s.next()
-            }
+                if ch=='\n' {
+                    ch = s.next()
+                }
+            }       
             
             ch = s.next()
             
