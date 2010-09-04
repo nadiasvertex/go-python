@@ -350,7 +350,7 @@ func (s *Scanner) scanString(quote int) (n int) {
     }
     for ch != quote {
         if (!multiline && ch == '\n') || ch < 0 {
-            s.error("string literal not terminated")
+            s.error("string literal not terminated\n")
             return
         }
         if ch == '\\' {
@@ -360,7 +360,9 @@ func (s *Scanner) scanString(quote int) (n int) {
         }
         n++
     }
-    
+
+    // Consume the extra quote characters when scanning
+    // multiline Python strings.    
     if multiline {
         ch = s.next()
         ch = s.next()
@@ -408,7 +410,7 @@ redo:
                 ch = s.next()
                 if ch == '"' || ch == '\'' {
                     scan_identifier = false
-                    s.scanString(s.next())
+                    s.scanString(ch)
                     tok = String
                     ch = s.next()
                 }
