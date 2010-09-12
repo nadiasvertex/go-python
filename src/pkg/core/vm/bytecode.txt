@@ -1,0 +1,130 @@
+
+
+Simple Function
+---------------
+
+
+def sum(a,b):
+    return a+b
+   
+# Function object setup 
+NAME    a, 1        # Create a new symbol "a", map to id 1
+NAME    b, 2        # Create a new symbol "b", map to id 2
+
+
+DEREF   1, r1        # Lookup the object with id 1, place it's pointer in register 1
+DEREF   2, r2        # Ditto for id 2, register 2
+
+ADD     r1,r2,r3     # Add r1 to r2, place the result in r3
+
+COPY    r3, r31
+RET                  # Return, r31 always holds the return value.
+
+
+
+Object Dereference
+------------------
+
+class Test:
+    def __init__(self):
+        self.a = 5
+        self.b = 100
+        
+NAME    self, 1
+NAME    a, 2
+NAME    b, 3
+
+DEREF   1, r1       # Load "self" in register 1
+BOX     5, r2       # Set register r2 to a new int object with value 5
+SET     r1, 2, r2   # Set attribute named by id 2 in object pointed to by r1 to value in r2
+
+BOX     100, r2     # Set register r2 to a new int object with value 100
+SET     r1, 3, r2   # Set attribute named by id 3 in object pointed to by r1 to value in r2
+
+Object Index
+-----------------
+
+a = [5,6,7,8]
+b=a[1]
+c=a[3]
+
+
+NAME    a, 1
+NAME    b, 2
+NAME    c, 3
+
+DEREF   1, r1       # Ignore how the list gets created and assigned to a, assume it has happened. Get id 1 into r1.
+
+BOX     1, r2
+INDEX   r1,r2,r3    # Using the object in r1 as the base, index using value in r2, and store the result in r3
+BIND    r3, 2       # Create a new name to object binding in the local namespace for id 2, set to value in r3
+
+BOX     3, r2
+INDEX   r1,r2,r3
+BIND    r3, 3
+
+Object Creation
+---------------
+
+a = [1,2,3,4,5]
+
+NAME    ListType, 1
+NAME    a, 2
+
+DEREF   1, r1
+NEW     r1, r2      # Construct a new object of type r1 in r2
+
+BOX     1, r3
+SPILL   r3, r2      # Takes the object in r3 and appends it to the list in r2.  r2 *must* point to a ListType
+
+BOX     2, r3
+SPILL   r3, r2
+BOX     3, r3
+SPILL   r3, r2
+BOX     4, r3
+SPILL   r3, r2
+BOX     5, r3
+SPILL   r3, r2
+
+BIND    r2, 2       # Set 'a' to the resulting list type
+
+
+Function Calls
+--------------
+
+a=5
+b=8   
+c=sum(a,b)
+
+NAME    a, 1
+NAME    b, 2
+NAME    c, 3
+NAME    sum, 4
+NAME    ListType, 5
+
+BOX     5, r1
+BIND    r1, 1
+BOX     8, r2
+BIND    r2, 2
+
+DEREF   5, r3       
+NEW     r3, r4      # Create a new list for the parameters
+SPILL   r1, r4      # Store parm 1
+SPILL   r2, r4      # Store parm 2
+
+DEREF   4, r3       # Get the function object
+CALL    r3, r4, r0  # Call the function, we don't have any keyword parms so use r0 (which always resolves to 0)
+
+BIND    r31, 3      # The return value is always in r31, so use that to bind to the local name
+ 
+
+
+
+
+
+
+
+
+    
+
+

@@ -14,37 +14,23 @@
    limitations under the License.
    --------------------------------------------------------------------
 
-   This file provides the implementation of the integer built-in object
-   type.
+   Contains the virtual machine itself, including the register defs.
+  
 */
 
-package types
+import "types"
 
-type IntObject struct {
-    *Object
-    Value int 
+type Machine struct {
+    Register [32]*types.Object
+    Pred     [32]bool
 }
 
-func (o *IntObject) Lt(l, r *PyObject) (bool) {
-    return l.Value < r.Value
-}
-
-func (o *IntObject) Gt(l, r *PyObject) (bool) {
-    return l.Value > r.Value
-}
-
-func (o *IntObject) Eq(l, r *PyObject) (bool) {
-    return l.Value == r.Value
-}
-
-func (o *IntObject) Neq(l, r *PyObject) (bool) {
-    return l.Value != r.Value
-}
-
-func (o *IntObject) Lte(l, r *PyObject) (bool) {
-    return l.Value <= r.Value
-}
-
-func (o *IntObject) Gte(l, r *PyObject) (bool) {
-    return l.Value >= r.Value
+func (m *Machine) Dispatch(c* CodeStream) {
+    var op := c.ReadByte()
+    
+    switch(op) {
+        case NOP:
+        case LOAD:
+            
+    }
 }
