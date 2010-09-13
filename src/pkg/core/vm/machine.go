@@ -21,8 +21,10 @@
 import "types"
 
 type Machine struct {
-    Register [32]*types.Object
-    Pred     [32]bool
+    Register    [32]*types.Object     
+    Pred        [32]bool
+    
+    NextInstruction int
 }
 
 func (m *Machine) Dispatch(c* CodeStream) {
@@ -30,7 +32,14 @@ func (m *Machine) Dispatch(c* CodeStream) {
     
     switch(op) {
         case NOP:
-        case LOAD:
+        case LOAD: {
+            var id          := c.ReadInt();
+            var target_reg  := c.ReadByte();
+            
+            m.Register[target_reg] = c.Locals[id];
+        }
+        
+        
             
     }
 }

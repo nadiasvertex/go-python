@@ -24,24 +24,52 @@ package vm
 import "bytes"
 
 const (
-    NOP,
-    DEREF,
+    NOP,    // 0 - 15 are "special" instructions    
+    LOAD,
     BIND,
     NEW,
-    INDEX,
+    INDEX,    
+    LEN,
+    _,
+    _,
+    _,
+    _,
+    _,
+    _,
+    _,
+    _,
+    _,
+    _,
+    
+    BOXI,   // 16-32 are immediate-mode instructions 
+    BOXL,
+    BOXF,
+    BOXS,
+    BOXB,
+    UNBOXI,
+    UNBOXL,
+    UNBOXF,
+    UNBOXS,
+    UNBOXB,
+    _,
+    _,
+    _,
+    _,
+    _,
+    _,    
+    
+    SPILL,  // 33-63 are register 3-code instructions op (src1, src2, dst)
+    FILL,
     SET,
     GET,
-    BOX,
-    UNBOX,
     ADD,
     SUB,
     MUL,
     DIV,
-    MOD,
-    LEN    
+    MOD,        
 )
 
-// A code stream contains all the code for one module.
+// A code stream contains all the code for one module
 type CodeStream struct {
     *bytes.Buffer
         
@@ -52,7 +80,7 @@ type CodeStream struct {
     Globals         map[int]*Object        
 }
 
-func (s *CodeStream) WriteDeref(name string, register byte) {
+func (s *CodeStream) WriteLoad(name string, register byte) {
     var value int
     var present bool
     
@@ -61,7 +89,7 @@ func (s *CodeStream) WriteDeref(name string, register byte) {
         s.StringCounter++
     }
 
-    s.Write(DEREF)
+    s.Write(LOAD)
     s.Write(value)
     s.Write(register)
 }

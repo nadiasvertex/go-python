@@ -1,8 +1,25 @@
+Register Mode Instruction Encoding
+-----------------------------------
 
+bits: 0 - 5 : opcode (64 possible opcodes)
+bits: 6 -10 : pred register (register 0 is always true, setting this to 0 makes the instruction always execute.)
+bits: 11    : if 0 execute when pred reg is true, else execute when pred reg is false
+bits: 12-16 : identify register operand 1
+bits: 17-21 : identify register operand 2
+bits: 22-26 : identify target register
+bits: 27-31 : reserved
+
+Immediate Mode Instruction Encoding
+-----------------------------------
+
+bits: 0 - 5 : opcode (64 possible opcodes)
+bits: 6 -10 : pred register (register 0 is always true, setting this to 0 makes the instruction always execute.)
+bits: 11    : if 0 execute when pred reg is true, else execute when pred reg is false
+bits: 12-16 : identify target register
+bits: 17-31 : 16-bit immediate
 
 Simple Function
 ---------------
-
 
 def sum(a,b):
     return a+b
@@ -11,9 +28,8 @@ def sum(a,b):
 NAME    a, 1        # Create a new symbol "a", map to id 1
 NAME    b, 2        # Create a new symbol "b", map to id 2
 
-
-DEREF   1, r1        # Lookup the object with id 1, place it's pointer in register 1
-DEREF   2, r2        # Ditto for id 2, register 2
+LOAD    1, r1        # Lookup the object with id 1, place it's pointer in register 1
+LOAD    2, r2        # Ditto for id 2, register 2
 
 ADD     r1,r2,r3     # Add r1 to r2, place the result in r3
 
@@ -34,7 +50,7 @@ NAME    self, 1
 NAME    a, 2
 NAME    b, 3
 
-DEREF   1, r1       # Load "self" in register 1
+LOAD    1, r1       # Load "self" in register 1
 BOX     5, r2       # Set register r2 to a new int object with value 5
 SET     r1, 2, r2   # Set attribute named by id 2 in object pointed to by r1 to value in r2
 
@@ -53,7 +69,7 @@ NAME    a, 1
 NAME    b, 2
 NAME    c, 3
 
-DEREF   1, r1       # Ignore how the list gets created and assigned to a, assume it has happened. Get id 1 into r1.
+LOAD    1, r1       # Ignore how the list gets created and assigned to a, assume it has happened. Get id 1 into r1.
 
 BOX     1, r2
 INDEX   r1,r2,r3    # Using the object in r1 as the base, index using value in r2, and store the result in r3
@@ -71,7 +87,7 @@ a = [1,2,3,4,5]
 NAME    ListType, 1
 NAME    a, 2
 
-DEREF   1, r1
+LOAD   1, r1
 NEW     r1, r2      # Construct a new object of type r1 in r2
 
 BOX     1, r3
@@ -107,17 +123,33 @@ BIND    r1, 1
 BOX     8, r2
 BIND    r2, 2
 
-DEREF   5, r3       
+LOAD    5, r3       
 NEW     r3, r4      # Create a new list for the parameters
 SPILL   r1, r4      # Store parm 1
 SPILL   r2, r4      # Store parm 2
 
-DEREF   4, r3       # Get the function object
+LOAD    4, r3       # Get the function object
 CALL    r3, r4, r0  # Call the function, we don't have any keyword parms so use r0 (which always resolves to 0)
 
 BIND    r31, 3      # The return value is always in r31, so use that to bind to the local name
  
+ 
+If Expressions
+--------------
 
+a = 5 if b<c else 9
+
+NAME    a, 1
+NAME    b, 2
+NAME    c, 3
+
+LOAD    2, r1
+LOAD    3, r2
+LT      r1, r2, p1  # If r1 is less than r2, set predicate register 1 to true, else set it to false
+
+BOX+p1  5, r3       # If predicate register 1 is true, execute this BOX
+BOX-p1  9, r3       # If predicate register 1 is false, execute this BOX
+BIND    1, r3       # Bind 'a' to the result.
 
 
 
