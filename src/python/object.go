@@ -25,14 +25,14 @@ type Object struct {
     Attrs map[string] *Object 
 }
 
-// Object attribute getting interface.
+//  Object attribute getting interface.
 type Getter interface {
-    GetAttr(name String) (*Object, bool)     
-}
+    GetAttr(name string) (*Object, bool)     
+} 
 
 // Object attribute setting interface.
 type Setter interface {
-    SetAttr(name String, value *Object)     
+    SetAttr(name string, value *Object)     
 }
 
 // Object rich comparison interface
@@ -46,12 +46,12 @@ type RichComparer interface {
 }
 
 // Get the value of an object's attribute.
-func (o *Object) GetAttr(name String) (value *Object, present bool) {
-    value, present := o.Attrs[name]  
+func (o *Object) GetAttr(name string) (value *Object, present bool) {
+    value, present = o.Attrs[name]  
 }
 
 // Set the value of an object's attribute.
-func (o *Object) SetAttr(name String, value *Object) {
+func (o *Object) SetAttr(name string, value *Object) {
     o.Attrs[name] = value  
 }
 

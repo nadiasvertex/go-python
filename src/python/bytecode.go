@@ -22,6 +22,7 @@
 package python
 
 import "bytes"
+import "encoding/binary"
 
 const (
     NOP = iota          // 0 - 15 are "special" instructions
@@ -62,43 +63,41 @@ type CodeStream struct {
     *bytes.Buffer
         
     Strings         map[string]uint16
-    StringCounter   int
+    StringCounter   uint16
     
     Locals          map[uint16]*Object
     Globals         map[uint16]*Object        
 }
 
-func (s *CodeStream) WriteLoad(name string, register byte) {
-    var instruction int = 0
-    var value int
+func (s *CodeStream) WriteLoad(name string, register uint32) {
+    var instruction uint32
+    var value uint16
     var present bool
     
-    if value, present := s.Strings[name]; !present {        
+    value, present = s.Strings[name]
+    
+    if !present {        
         value = s.StringCounter
         s.StringCounter++
     }
 
-    instruction |= LOAD;
-    instruction |= value << immediate_val_shift;
-    instruction |= register << imm_target_reg_shift;
-
-    s.Write(instruction)
+    instruction = LOAD | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
+    binary.Write(s, binary.LittleEndian, instruction)    
 }
 
-func (s *CodeStream) WriteBind(name string, register byte) {
-    var instruction int = 0
-    var value int
+func (s *CodeStream) WriteBind(name string, register uint32) {
+    var instruction uint32 = 0
+    var value uint16
     var present bool
     
-    if value, present := s.Strings[name]; !present {        
+    value, present = s.Strings[name]
+    
+    if !present {        
         value = s.StringCounter
         s.StringCounter++
     }
 
-    instruction |= BIND;
-    instruction |= value << immediate_val_shift;
-    instruction |= register << imm_target_reg_shift;
-
-    s.Write(instruction)
+    instruction = BIND | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
+    binary.Write(s, binary.LittleEndian, instruction)    
 }
 
