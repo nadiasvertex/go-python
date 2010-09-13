@@ -2,21 +2,21 @@ Register Mode Instruction Encoding
 -----------------------------------
 
 bits: 0 - 5 : opcode (64 possible opcodes)
-bits: 6 -10 : pred register (register 0 is always true, setting this to 0 makes the instruction always execute.)
-bits: 11    : if 0 execute when pred reg is true, else execute when pred reg is false
-bits: 12-16 : identify register operand 1
-bits: 17-21 : identify register operand 2
-bits: 22-26 : identify target register
-bits: 27-31 : reserved
+bits: 6     : if 0 execute when pred reg is true, else execute when pred reg is false
+bits: 7 -11 : pred register (register 0 is always true, setting this to 0 makes the instruction always execute.)
+bits: 12-15 : identify register operand 1
+bits: 16-19 : identify register operand 2
+bits: 20-23 : identify target register
+bits: 23-31 : reserved
 
 Immediate Mode Instruction Encoding
 -----------------------------------
 
 bits: 0 - 5 : opcode (64 possible opcodes)
-bits: 6 -10 : pred register (register 0 is always true, setting this to 0 makes the instruction always execute.)
-bits: 11    : if 0 execute when pred reg is true, else execute when pred reg is false
-bits: 12-16 : identify target register
-bits: 17-31 : 16-bit immediate
+bits: 6     : if 0 execute when pred reg is true, else execute when pred reg is false
+bits: 7 -11 : pred register (register 0 is always true, setting this to 0 makes the instruction always execute.)
+bits: 12-15 : identify target register
+bits: 16-31 : 16-bit immediate
 
 Simple Function
 ---------------

@@ -20,11 +20,37 @@
 
 import "types"
 
+// All instruction types
+const instruction_mask  uint32 = 0x000003f
+const pred_execute_mask uint32 = 0x0000040
+const pred_reg_mask     uint32 = 0x0000F80
+
+const pred_execute_shift    uint32 = 6
+const pred_reg_shift        uint32 = 7
+
+// Register mode instruction types
+const source_reg1_mask  uint32 = 0x000F000
+const source_reg2_mask  uint32 = 0x00F0000
+const target_reg_mask   uint32 = 0x0F00000
+
+const source_reg1_shift uint32 = 12
+const source_reg2_shift uint32 = 16
+const target_reg_shift  uint32 = 20
+
+
+// Immediate mode instruction types
+const imm_target_reg_mask   uint32 = 0x0000F000
+const immediate_val_mask    uint32 = 0xFFFF0000
+
+const imm_target_reg_shift  uint32 = 12
+const immediate_val_shift   uint32 = 16
+
+
 type Machine struct {
-    Register    [32]*types.Object     
+    Register    [16]*types.Object     
     Pred        [32]bool
     
-    NextInstruction int
+    NextInstruction uint32
 }
 
 func (m *Machine) Dispatch(c* CodeStream) {
@@ -33,8 +59,9 @@ func (m *Machine) Dispatch(c* CodeStream) {
     switch(op) {
         case NOP:
         case LOAD: {
-            var id          := c.ReadInt();
-            var target_reg  := c.ReadByte();
+            var instruction := c.ReadUint32();            
+            var op          := instruction & instruction_mask;
+            var target_reg   
             
             m.Register[target_reg] = c.Locals[id];
         }

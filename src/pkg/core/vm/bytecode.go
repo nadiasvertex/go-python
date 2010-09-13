@@ -24,11 +24,8 @@ package vm
 import "bytes"
 
 const (
-    NOP,    // 0 - 15 are "special" instructions    
-    LOAD,
-    BIND,
-    NEW,
-    INDEX,    
+    NOP,    // 0 - 15 are "special" instructions
+    NEW,        
     LEN,
     _,
     _,
@@ -40,8 +37,13 @@ const (
     _,
     _,
     _,
+    _,
+    _,
+    _,
     
-    BOXI,   // 16-32 are immediate-mode instructions 
+    LOAD,   // 16-32 are immediate-mode instructions
+    BIND,
+    BOXI,    
     BOXL,
     BOXF,
     BOXS,
@@ -55,10 +57,9 @@ const (
     _,
     _,
     _,
-    _,
-    _,    
     
-    SPILL,  // 33-63 are register 3-code instructions op (src1, src2, dst)
+    INDEX,    // 33-63 are register 3-code instructions op (src1, src2, dst)
+    SPILL,
     FILL,
     SET,
     GET,
@@ -66,21 +67,22 @@ const (
     SUB,
     MUL,
     DIV,
-    MOD,        
+    MOD        
 )
 
 // A code stream contains all the code for one module
 type CodeStream struct {
     *bytes.Buffer
         
-    Strings         map[string]int
+    Strings         map[string]uint16
     StringCounter   int
     
-    Locals          map[int]*Object
-    Globals         map[int]*Object        
+    Locals          map[uint16]*Object
+    Globals         map[uint16]*Object        
 }
 
 func (s *CodeStream) WriteLoad(name string, register byte) {
+    var instruction int := 0
     var value int
     var present bool
     
@@ -88,6 +90,8 @@ func (s *CodeStream) WriteLoad(name string, register byte) {
         value = s.StringCounter
         s.StringCounter++
     }
+
+    instruction |= LOAD;
 
     s.Write(LOAD)
     s.Write(value)
