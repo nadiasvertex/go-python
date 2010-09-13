@@ -54,18 +54,33 @@ type Machine struct {
 }
 
 func (m *Machine) Dispatch(c* CodeStream) {
-    var op := c.ReadByte()
+    var instruction := c.ReadUint32()
+    var op          := instruction & instruction_mask;
     
-    switch(op) {
-        case NOP:
-        case LOAD: {
-            var instruction := c.ReadUint32();            
-            var op          := instruction & instruction_mask;
-            var target_reg   
-            
-            m.Register[target_reg] = c.Locals[id];
-        }
+    var reg1, reg2, reg3 uint8  := 0
+    var imm              uint16 := 0    
+    
+    // Decoder stage - decodes the instruction based on our instruction formats.
+    switch {
+        case op <=15:
         
+        case op >=16 && op <=31:
+            reg3 := (instruction & imm_target_reg_mask)>>imm_target_reg_shift
+            imm  := (instruction & immediate_val_mas)>>immediate_val_mask
+            
+        default:
+            reg1 := (instruction & source_reg1_mask)>>source_reg1_shift
+            reg2 := (instruction & source_reg2_mask)>>source_reg2_shift
+            reg3 := (instruction & source_reg3_mask)>>source_reg3_shift
+    }
+    
+    // Execution stage - actually processes the instructions.
+    switch op {
+        case NOP:
+        case LOAD:
+            m.Register[reg3] = c.Locals[imm]            
+        case BIND:
+            c.Locals[imm] = m.Register[reg3]
         
             
     }

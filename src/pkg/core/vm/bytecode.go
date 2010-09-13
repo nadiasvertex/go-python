@@ -92,8 +92,26 @@ func (s *CodeStream) WriteLoad(name string, register byte) {
     }
 
     instruction |= LOAD;
+    instruction |= value << immediate_val_shift;
+    instruction |= register << imm_target_reg_shift;
 
-    s.Write(LOAD)
-    s.Write(value)
-    s.Write(register)
+    s.Write(instruction)
 }
+
+func (s *CodeStream) WriteBind(name string, register byte) {
+    var instruction int := 0
+    var value int
+    var present bool
+    
+    if value, present := s.Strings[name]; !present {        
+        value = s.StringCounter
+        s.StringCounter++
+    }
+
+    instruction |= BIND;
+    instruction |= value << immediate_val_shift;
+    instruction |= register << imm_target_reg_shift;
+
+    s.Write(instruction)
+}
+
