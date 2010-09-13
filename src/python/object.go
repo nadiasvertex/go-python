@@ -47,14 +47,17 @@ type RichComparer interface {
 
 // Get the value of an object's attribute.
 func (o *Object) GetAttr(name string) (value *Object, present bool) {
-    value, present = o.Attrs[name]  
+    value, present = o.Attrs[name]
+    return  
 }
 
 // Set the value of an object's attribute.
 func (o *Object) SetAttr(name string, value *Object) {
-    o.Attrs[name] = value  
+    o.Attrs[name] = value
+    return  
 }
 
+/*
 // Lookup the less than operator and execute it, if one exists.
 func (o *Object) Lt(l, r *Object) (bool) {
     if cmp, present := o.GetAttr("__lt__"); present {
@@ -64,7 +67,7 @@ func (o *Object) Lt(l, r *Object) (bool) {
     
     // Default to comparing the pointer values.  This
     // is probably wrong;
-    return l  < r
+    return false//l  < r
 }
 
 // Lookup the greater than operator and execute it, if one exists.
@@ -76,7 +79,7 @@ func (o *Object) Gt(l, r *Object) (bool) {
     
     // Default to comparing the pointer values.  This
     // is probably wrong;
-    return l  > r
+    return false //l  > r
 }
 
 // Lookup the equal operator and execute it, if one exists.
@@ -88,7 +91,7 @@ func (o *Object) Eq(l, r *Object) (bool) {
     
     // Default to comparing the pointer values.  This
     // is probably wrong;
-    return l  == r
+    return false //l  == r
 }
 
 // Lookup the not equal operator and execute it, if one exists.
@@ -100,7 +103,7 @@ func (o *Object) Neq(l, r *Object) (bool) {
     
     // Default to comparing the pointer values.  This
     // is probably wrong;
-    return l != r
+    return false //l != r
 }
 
 // Lookup the less than or equal operator and execute it, if one exists.
@@ -112,7 +115,7 @@ func (o *Object) Lte(l, r *Object) (bool) {
     
     // Default to comparing the pointer values.  This
     // is probably wrong;
-    return l  <= r
+    return false //l  <= r
 }
 
 // Lookup the greater than or equal operator and execute it, if one exists.
@@ -124,7 +127,7 @@ func (o *Object) Gte(l, r *Object) (bool) {
     
     // Default to comparing the pointer values.  This
     // is probably wrong;
-    return l  >= r
+    return false //l  >= r
 }
 
-
+*/
