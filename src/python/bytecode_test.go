@@ -14,37 +14,15 @@
    limitations under the License.
    --------------------------------------------------------------------
 
-   This file provides the implementation of the integer built-in object
-   type.
+  The VM package provides a Go implementation of the Python virtual machine.  The VM
+  is implemented as a register-based system with tracing and JIT hooks.   
+  
 */
 
-package types
+package python
 
-type IntObject struct {
-    *Object
-    Value int 
-}
+import "testing"
 
-func (o *IntObject) Lt(l, r *PyObject) (bool) {
-    return l.Value < r.Value
-}
-
-func (o *IntObject) Gt(l, r *PyObject) (bool) {
-    return l.Value > r.Value
-}
-
-func (o *IntObject) Eq(l, r *PyObject) (bool) {
-    return l.Value == r.Value
-}
-
-func (o *IntObject) Neq(l, r *PyObject) (bool) {
-    return l.Value != r.Value
-}
-
-func (o *IntObject) Lte(l, r *PyObject) (bool) {
-    return l.Value <= r.Value
-}
-
-func (o *IntObject) Gte(l, r *PyObject) (bool) {
-    return l.Value >= r.Value
+func TestEncodeInstructions(t *testing.T) {
+    
 }

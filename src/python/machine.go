@@ -18,7 +18,7 @@
   
 */
 
-import "types"
+package python
 
 // All instruction types
 const instruction_mask  uint32 = 0x000003f
@@ -47,18 +47,18 @@ const immediate_val_shift   uint32 = 16
 
 
 type Machine struct {
-    Register    [16]*types.Object     
+    Register    [16]*Object     
     Pred        [32]bool
     
     NextInstruction uint32
 }
 
 func (m *Machine) Dispatch(c* CodeStream) {
-    var instruction := c.ReadUint32()
-    var op          := instruction & instruction_mask;
+    var instruction = c.ReadUint32()
+    var op          = instruction & instruction_mask;
     
-    var reg1, reg2, reg3 uint8  := 0
-    var imm              uint16 := 0    
+    var reg1, reg2, reg3 uint8  = 0
+    var imm              uint16 = 0    
     
     // Decoder stage - decodes the instruction based on our instruction formats.
     switch {
@@ -80,8 +80,6 @@ func (m *Machine) Dispatch(c* CodeStream) {
         case LOAD:
             m.Register[reg3] = c.Locals[imm]            
         case BIND:
-            c.Locals[imm] = m.Register[reg3]
-        
-            
+            c.Locals[imm] = m.Register[reg3]                    
     }
 }

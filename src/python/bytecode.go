@@ -19,55 +19,42 @@
   
 */
 
-package vm
+package python
 
 import "bytes"
 
 const (
-    NOP,    // 0 - 15 are "special" instructions
-    NEW,        
-    LEN,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    _,
-    
-    LOAD,   // 16-32 are immediate-mode instructions
-    BIND,
-    BOXI,    
-    BOXL,
-    BOXF,
-    BOXS,
-    BOXB,
-    UNBOXI,
-    UNBOXL,
-    UNBOXF,
-    UNBOXS,
-    UNBOXB,
-    _,
-    _,
-    _,
-    _,
-    
-    INDEX,    // 33-63 are register 3-code instructions op (src1, src2, dst)
-    SPILL,
-    FILL,
-    SET,
-    GET,
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD        
+    NOP = iota          // 0 - 15 are "special" instructions
+    NEW        
+    LEN
+)
+
+const (    
+    LOAD = 16 + iota    // 16-32 are immediate-mode instructions
+    BIND
+    BOXI    
+    BOXL
+    BOXF
+    BOXS
+    BOXB
+    UNBOXI
+    UNBOXL
+    UNBOXF
+    UNBOXS
+    UNBOXB
+)
+
+const ( 
+    INDEX = 33 + iota   // 33-63 are register 3-code instructions op (src1, src2, dst)
+    SPILL
+    FILL
+    SET
+    GET
+    ADD
+    SUB
+    MUL
+    DIV
+    MOD
 )
 
 // A code stream contains all the code for one module
@@ -82,7 +69,7 @@ type CodeStream struct {
 }
 
 func (s *CodeStream) WriteLoad(name string, register byte) {
-    var instruction int := 0
+    var instruction int = 0
     var value int
     var present bool
     
@@ -99,7 +86,7 @@ func (s *CodeStream) WriteLoad(name string, register byte) {
 }
 
 func (s *CodeStream) WriteBind(name string, register byte) {
-    var instruction int := 0
+    var instruction int = 0
     var value int
     var present bool
     

@@ -18,7 +18,7 @@
    are built-in to the Python language.
 */
 
-package types
+package python
 
 type Object struct {
     Name string

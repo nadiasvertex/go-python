@@ -26,7 +26,7 @@
    an indent/dedent stack - which also appear as tokens.
 */
 
-package parser
+package python
 
 import (
     "bytes"
