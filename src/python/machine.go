@@ -20,6 +20,8 @@
 
 package python
 
+import "encoding/binary"
+
 // All instruction types
 const instruction_mask  uint32 = 0x000003f
 const pred_execute_mask uint32 = 0x0000040
@@ -54,8 +56,10 @@ type Machine struct {
 }
 
 func (m *Machine) Dispatch(c* CodeStream) {
-    var instruction = c.ReadUint32()
-    var op          = instruction & instruction_mask;
+    var instruction uint32     
+    binary.Read(c, binary.LittleEndian, &instruction);
+    
+    op := instruction & instruction_mask;
     
     var reg1, reg2, reg3 uint8  = 0
     var imm              uint16 = 0    
