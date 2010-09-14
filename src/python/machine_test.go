@@ -25,23 +25,44 @@ import (
         "testing"            
 )
 
+func checkIntResult(t *testing.T, m *Machine, register int, wanted Object, message string) {
+    if test_value, ok := m.Register[register].(*IntObject); !ok {
+        t.Errorf("failure dispatching '%v' (register %v has incorrect type: '%v')\n", message, register, m.Register[3])        
+    } else {
+        if m.Register[register] != wanted {
+            t.Errorf("failure dispatching '%v', (register %v has incorrect value '%v')\n", message, register, test_value.AsInt())            
+        }
+    }
+    
+    return
+}
+
 func TestDispatchInstructions(t *testing.T) {
     
     s := new (CodeStream)
     s.Init()
     
     m := new (Machine)
-    //m.Init()
     
+    io1 := new(IntObject)
+    io1.Value = 10
     
+    s.BindLocal("a", io1)    
 
     s.WriteLoad("a", 3, false, 0)
-    s.WriteBind("b", 5, false, 1)
+    s.WriteBind("b", 3, false, 0)
+    s.WriteLoad("b", 4, false, 0)
     
+    // Test the Load
     m.Dispatch(s)
+    checkIntResult(t, m, 3, io1, "LOAD 1, r3")
     
-    // Check result
-    if m.Register[3] != nil {
-        t.Error("failure dispatching 'LOAD 1, 3'\n")
-    }
+    // Test bind and reload
+    m.Dispatch(s)
+    m.Dispatch(s)
+    checkIntResult(t, m, 4, io1, "LOAD 2, r4")
+    
+    
+        
+    
 }
