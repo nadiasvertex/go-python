@@ -47,6 +47,10 @@ type RichComparer interface {
 
 type BinaryArithmetic interface {
     Add(r Object) (Object)
+    Sub(r Object) (Object)
+    Mul(r Object) (Object)
+    Div(r Object) (Object)
+    Mod(r Object) (Object)
 }
 
 type Converter interface {

@@ -35,7 +35,7 @@ func TestEncodeInstructions(t *testing.T) {
 
     s.WriteLoad("a", 3, false, 0)
     s.WriteBind("b", 5, false, 1)
-    s.WriteAdd(3,4,5,false,0)
+    s.WriteAluIns(ADD,3,4,5,false,0)
     
     for i:=0; i<3; i++ {
 	    var instruction uint32     

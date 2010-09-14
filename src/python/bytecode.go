@@ -124,9 +124,9 @@ func (s *CodeStream) WriteBind(name string, register uint32, pred_bit bool, pred
     binary.Write(s, binary.LittleEndian, predicate(instruction, pred_bit, pred_reg))    
 }
 
-func (s *CodeStream) WriteAdd(reg1, reg2, target_reg uint32, pred_bit bool, pred_reg uint32) {
+func (s *CodeStream) WriteAluIns(op, reg1, reg2, target_reg uint32, pred_bit bool, pred_reg uint32) {
     var instruction uint32
     
-    instruction = ADD | (reg1<<source_reg1_shift) | (reg2<<source_reg2_shift) | (target_reg<<target_reg_shift)    
+    instruction = op | (reg1<<source_reg1_shift) | (reg2<<source_reg2_shift) | (target_reg<<target_reg_shift)    
     binary.Write(s, binary.LittleEndian, predicate(instruction, pred_bit, pred_reg))    
 }

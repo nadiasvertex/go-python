@@ -91,12 +91,12 @@ func (m *Machine) Dispatch(c* CodeStream) {
     // Execution stage - actually processes the instructions.
     switch op {
         case NOP:
-        case LOAD:
-            m.Register[reg3] = c.Locals[imm]            
-        case BIND:
-            c.Locals[imm] = m.Register[reg3]
-        case ADD:
-            m.Register[reg3] = m.Register[reg1].Add(m.Register[reg2])       
-            
+        case LOAD: m.Register[reg3] = c.Locals[imm]            
+        case BIND: c.Locals[imm] = m.Register[reg3]
+        case ADD:  m.Register[reg3] = m.Register[reg1].Add(m.Register[reg2])       
+        case SUB:  m.Register[reg3] = m.Register[reg1].Sub(m.Register[reg2])            
+        case MUL:  m.Register[reg3] = m.Register[reg1].Mul(m.Register[reg2])
+        case DIV:  m.Register[reg3] = m.Register[reg1].Div(m.Register[reg2])
+        case MOD:  m.Register[reg3] = m.Register[reg1].Mod(m.Register[reg2])
     }
 }

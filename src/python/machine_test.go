@@ -65,7 +65,11 @@ func TestDispatchInstructions(t *testing.T) {
     s.WriteLoad("a", 3, false, 0)
     s.WriteBind("b", 3, false, 0)
     s.WriteLoad("b", 4, false, 0)
-    s.WriteAdd(3,4,5,false,0)
+    s.WriteAluIns(ADD,3,4,5,false,0)
+    s.WriteAluIns(SUB,3,4,6,false,0)
+    s.WriteAluIns(MUL,3,4,7,false,0)
+    s.WriteAluIns(DIV,3,4,8,false,0)
+    s.WriteAluIns(MOD,3,7,9,false,0)
     
     // Test the Load
     m.Dispatch(s)
@@ -79,5 +83,21 @@ func TestDispatchInstructions(t *testing.T) {
     // Test add
     m.Dispatch(s)    
     checkIntValueResult(t, m, 5, 20, "ADD r3, r4, r5")           
+    
+    // Test sub
+    m.Dispatch(s)    
+    checkIntValueResult(t, m, 6, 0, "SUB r3, r4, r6")
+    
+    // Test mul
+    m.Dispatch(s)    
+    checkIntValueResult(t, m, 7, 100, "MUL r3, r4, r7")
+    
+    // Test div
+    m.Dispatch(s)    
+    checkIntValueResult(t, m, 8, 1, "DIV r3, r4, r8")
+    
+    // Test mod
+    m.Dispatch(s)    
+    checkIntValueResult(t, m, 9, 10, "MOD r3, r7, r9")
     
 }

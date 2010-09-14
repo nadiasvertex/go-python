@@ -65,4 +65,32 @@ func (o *IntObject) Add(r Object) (Object) {
     return result
 }
 
+func (o *IntObject) Sub(r Object) (Object) {
+    result := new (IntObject)
+    result.Value = o.Value - r.AsInt()
+    
+    return result
+}
+
+func (o *IntObject) Mul(r Object) (Object) {
+    result := new (IntObject)
+    result.Value = o.Value * r.AsInt()
+    
+    return result
+}
+
+func (o *IntObject) Div(r Object) (Object) {
+    result := new (IntObject)
+    result.Value = o.Value / r.AsInt()
+    
+    return result
+}
+
+func (o *IntObject) Mod(r Object) (Object) {
+    result := new (IntObject)
+    result.Value = o.Value % r.AsInt()
+    
+    return result
+}
+
 
