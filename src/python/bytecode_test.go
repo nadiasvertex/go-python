@@ -23,6 +23,10 @@ package python
 
 import "testing"
 
+var sample_instructions = []int32{0x01020304, 0x05060708}
+
 func TestEncodeInstructions(t *testing.T) {
+
     
+  
 }

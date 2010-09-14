@@ -58,8 +58,18 @@ type Machine struct {
 func (m *Machine) Dispatch(c* CodeStream) {
     var instruction uint32     
     binary.Read(c, binary.LittleEndian, &instruction);
+        
+    pred_exec := instruction & pred_execute_mask
+    pred_reg  := (instruction & pred_reg_mask)>>pred_reg_shift
     
-    op := instruction & instruction_mask;
+    // Decide if we should execute this instruction.  If the specified predicate register is
+    // equal to 0 then always execute it. If the pred_exec flag is set and the pred register is false, then 
+    // don't execute.  If the pred_exec flag is clear and the pred register is true, don't execute it.   
+    if pred_reg > 0 && (pred_exec!=0 && !m.Pred[pred_reg]) || (pred_exec==0 && m.Pred[pred_reg]) {
+        return
+    }
+    
+    op := instruction & instruction_mask
     
     var /*reg1, reg2,*/ reg3 uint32  
     var imm              uint16     
