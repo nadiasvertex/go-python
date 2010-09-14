@@ -26,15 +26,15 @@ import (
         "encoding/binary"
 )
 
-var sample_instructions = []uint32{0x00003010, 0x00015011}
+var sample_instructions = []uint32{0x00003010, 0x00015091}
 
 func TestEncodeInstructions(t *testing.T) {
     
     s := new (CodeStream)
     s.Init()
 
-    s.WriteLoad("a", 3)
-    s.WriteBind("b", 5)
+    s.WriteLoad("a", 3, false, 0)
+    s.WriteBind("b", 5, false, 1)
     
     for i:=0; i<2; i++ {
 	    var instruction uint32     

@@ -74,7 +74,7 @@ func (s *CodeStream) Init() {
     s.Strings = make(map[string]uint16, 16)    
 }
 
-func (s *CodeStream) WriteLoad(name string, register uint32) {
+func (s *CodeStream) WriteLoad(name string, register uint32, pred_bit bool, pred_reg uint32) {
     var instruction uint32
     var value uint16
     var present bool
@@ -86,11 +86,14 @@ func (s *CodeStream) WriteLoad(name string, register uint32) {
         s.StringCounter++
     }
 
-    instruction = LOAD | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
+    instruction = LOAD | (pred_reg << pred_reg_shift) | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
+    if pred_bit {
+        instruction |= 1<<pred_execute_shift;
+    }
     binary.Write(s, binary.LittleEndian, instruction)    
 }
 
-func (s *CodeStream) WriteBind(name string, register uint32) {
+func (s *CodeStream) WriteBind(name string, register uint32, pred_bit bool, pred_reg uint32) {
     var instruction uint32 = 0
     var value uint16
     var present bool
@@ -102,7 +105,10 @@ func (s *CodeStream) WriteBind(name string, register uint32) {
         s.StringCounter++
     }
 
-    instruction = BIND | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
+    instruction = BIND | (pred_reg << pred_reg_shift) | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
+    if pred_bit {
+        instruction |= 1<<pred_execute_shift;
+    }
     binary.Write(s, binary.LittleEndian, instruction)    
 }
 

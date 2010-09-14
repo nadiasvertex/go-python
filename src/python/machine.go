@@ -57,7 +57,7 @@ type Machine struct {
 
 func (m *Machine) Dispatch(c* CodeStream) {
     var instruction uint32     
-    binary.Read(c, binary.LittleEndian, &instruction);
+    binary.Read(c, binary.LittleEndian, &instruction)
         
     pred_exec := instruction & pred_execute_mask
     pred_reg  := (instruction & pred_reg_mask)>>pred_reg_shift
