@@ -32,6 +32,8 @@ func TestDispatchInstructions(t *testing.T) {
     
     m := new (Machine)
     //m.Init()
+    
+    
 
     s.WriteLoad("a", 3, false, 0)
     s.WriteBind("b", 5, false, 1)

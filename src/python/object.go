@@ -20,39 +20,51 @@
 
 package python
 
-type Object struct {
+type ObjectData struct {
     Name string
-    Attrs map[string] *Object 
+    Attrs map[string]Object 
 }
 
 //  Object attribute getting interface.
 type Getter interface {
-    GetAttr(name string) (*Object, bool)     
+    GetAttr(name string) (value Object, present bool)     
 } 
 
 // Object attribute setting interface.
 type Setter interface {
-    SetAttr(name string, value *Object)     
+    SetAttr(name string, value Object)     
 }
 
 // Object rich comparison interface
 type RichComparer interface {
-    Lt(l, r *Object) (bool)
-    Gt(l, r *Object) (bool)
-    Eq(l, r *Object) (bool)
-    Neq(l, r *Object) (bool)
-    Lte(l, r *Object) (bool)
-    Gte(l, r *Object) (bool)
+    Lt(r Object) (bool)
+    Gt(r Object) (bool)
+    Eq(r Object) (bool)
+    Neq(r Object) (bool)
+    Lte(r Object) (bool)
+    Gte(r Object) (bool)
+}
+
+type Converter interface {
+    AsInt() (int)    
+}
+
+// Object composite interface
+type Object interface {
+    Getter
+    Setter
+    RichComparer
+    Converter
 }
 
 // Get the value of an object's attribute.
-func (o *Object) GetAttr(name string) (value *Object, present bool) {
+func (o *ObjectData) GetAttr(name string) (value Object, present bool) {
     value, present = o.Attrs[name]
     return  
 }
 
 // Set the value of an object's attribute.
-func (o *Object) SetAttr(name string, value *Object) {
+func (o *ObjectData) SetAttr(name string, value Object) {
     o.Attrs[name] = value
     return  
 }

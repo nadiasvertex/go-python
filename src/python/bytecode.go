@@ -31,7 +31,7 @@ const (
 )
 
 const (    
-    LOAD = 16 + iota    // 16-32 are immediate-mode instructions
+    LOAD = 16 + iota    // 16-32 are immediate-mode instructions (op immediate, reg) or (op reg, immediate)
     BIND
     BOXI    
     BOXL
@@ -65,29 +65,44 @@ type CodeStream struct {
     Strings         map[string]uint16
     StringCounter   uint16
     
-    Locals          map[uint16]*Object
-    Globals         map[uint16]*Object        
+    Locals          map[uint16]Object
+    Globals         map[uint16]Object        
 }
 
 func (s *CodeStream) Init() {
     s.Buffer    = new (bytes.Buffer)
     s.Strings   = make(map[string]uint16, 16)
-    s.Locals    = make(map[uint16]*Object, 16)
-    s.Globals   = make(map[uint16]*Object, 16)
+    s.Locals    = make(map[uint16]Object, 16)
+    s.Globals   = make(map[uint16]Object, 16)
 }
 
-func (s *CodeStream) WriteLoad(name string, register uint32, pred_bit bool, pred_reg uint32) {
-    var instruction uint32
+// Name a variable for the scope.  This inserts a name into the strings table
+func (s *CodeStream) Name(name string) (uint16) {
     var value uint16
     var present bool
     
     value, present = s.Strings[name]
     
-    if !present {        
+    if !present {
         value = s.StringCounter
+        s.Strings[name] = value
         s.StringCounter++
     }
+    
+    return value
+}
 
+// Bind a name to the local variable context.
+func (s *CodeStream) BindLocal(n string, o Object) {
+    id := s.Name(n)
+    s.Locals[id] = o
+}
+
+func (s *CodeStream) WriteLoad(name string, register uint32, pred_bit bool, pred_reg uint32) {
+    var instruction uint32
+    
+    value :=  s.Name(name)
+    
     instruction = LOAD | (pred_reg << pred_reg_shift) | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
     if pred_bit {
         instruction |= 1<<pred_execute_shift;
@@ -96,17 +111,10 @@ func (s *CodeStream) WriteLoad(name string, register uint32, pred_bit bool, pred
 }
 
 func (s *CodeStream) WriteBind(name string, register uint32, pred_bit bool, pred_reg uint32) {
-    var instruction uint32 = 0
-    var value uint16
-    var present bool
+    var instruction uint32
     
-    value, present = s.Strings[name]
+    value :=  s.Name(name)
     
-    if !present {        
-        value = s.StringCounter
-        s.StringCounter++
-    }
-
     instruction = BIND | (pred_reg << pred_reg_shift) | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
     if pred_bit {
         instruction |= 1<<pred_execute_shift;

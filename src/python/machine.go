@@ -49,7 +49,7 @@ const immediate_val_shift   uint32 = 16
 
 
 type Machine struct {
-    Register    [16]*Object     
+    Register    [16]Object     
     Pred        [32]bool
     
     NextInstruction uint32

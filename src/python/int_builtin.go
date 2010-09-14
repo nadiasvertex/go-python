@@ -21,30 +21,34 @@
 package python
 
 type IntObject struct {
-    *Object
+    *ObjectData
     Value int 
 }
 
-func (o *IntObject) Lt(l, r *IntObject) (bool) {
-    return l.Value < r.Value
+func (o *IntObject) AsInt() (int) {
+    return o.Value
 }
 
-func (o *IntObject) Gt(l, r *IntObject) (bool) {
-    return l.Value > r.Value
+func (o *IntObject) Lt(r Object) (bool) {
+    return o.Value < r.AsInt()
 }
 
-func (o *IntObject) Eq(l, r *IntObject) (bool) {
-    return l.Value == r.Value
+func (o *IntObject) Gt(r Object) (bool) {
+    return o.Value > r.AsInt()
 }
 
-func (o *IntObject) Neq(l, r *IntObject) (bool) {
-    return l.Value != r.Value
+func (o *IntObject) Eq(r Object) (bool) {
+    return o.Value == r.AsInt()
 }
 
-func (o *IntObject) Lte(l, r *IntObject) (bool) {
-    return l.Value <= r.Value
+func (o *IntObject) Neq(r Object) (bool) {
+    return o.Value != r.AsInt()
 }
 
-func (o *IntObject) Gte(l, r *IntObject) (bool) {
-    return l.Value >= r.Value
+func (o *IntObject) Lte(r Object) (bool) {
+    return o.Value <= r.AsInt()
+}
+
+func (o *IntObject) Gte(r Object) (bool) {
+    return o.Value >= r.AsInt()
 }
