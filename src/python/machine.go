@@ -55,6 +55,11 @@ type Machine struct {
     NextInstruction uint32
 }
 
+/*func (m *Machine) Init() {
+    m.Register = make([16]*Object)
+    m.Pred     = make([16]bool)
+}*/
+
 func (m *Machine) Dispatch(c* CodeStream) {
     var instruction uint32     
     binary.Read(c, binary.LittleEndian, &instruction)

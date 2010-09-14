@@ -70,8 +70,10 @@ type CodeStream struct {
 }
 
 func (s *CodeStream) Init() {
-    s.Buffer = new (bytes.Buffer)
-    s.Strings = make(map[string]uint16, 16)    
+    s.Buffer    = new (bytes.Buffer)
+    s.Strings   = make(map[string]uint16, 16)
+    s.Locals    = make(map[uint16]*Object, 16)
+    s.Globals   = make(map[uint16]*Object, 16)
 }
 
 func (s *CodeStream) WriteLoad(name string, register uint32, pred_bit bool, pred_reg uint32) {

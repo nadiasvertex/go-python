@@ -41,7 +41,7 @@ func TestEncodeInstructions(t *testing.T) {
 	    binary.Read(s, binary.LittleEndian, &instruction)
 	    
 	    if instruction!=sample_instructions[i] {
-	        t.Errorf("expected to read instruction '%v', got '%v'", sample_instructions[i], instruction)
+	        t.Errorf("expected to read instruction '%v', got '%v'\n", sample_instructions[i], instruction)
 	    }
 	}
 }
