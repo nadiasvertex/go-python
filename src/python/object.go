@@ -50,11 +50,13 @@ type BinaryArithmetic interface {
     Sub(r Object) (Object)
     Mul(r Object) (Object)
     Div(r Object) (Object)
+    FloorDiv(r Object) (Object)
     Mod(r Object) (Object)
 }
 
 type Converter interface {
-    AsInt() (int)    
+    AsInt()     (int)
+    AsFloat()   (float64)    
 }
 
 // Object composite interface

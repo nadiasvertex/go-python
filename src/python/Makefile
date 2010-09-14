@@ -7,5 +7,6 @@ GOFILES=\
 	machine.go\
 	object.go\
 	int_builtin.go\
+	float_builtin.go\
 		
 include $(GOROOT)/src/Make.pkg

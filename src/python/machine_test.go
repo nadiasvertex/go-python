@@ -49,6 +49,17 @@ func checkIntValueResult(t *testing.T, m *Machine, register int, wanted int, mes
     return
 }
 
+func checkFloatValueResult(t *testing.T, m *Machine, register int, wanted float64, message string) {
+    if test_value, ok := m.Register[register].(*FloatObject); !ok {
+        t.Errorf("failure dispatching '%v' (register %v has incorrect type: '%v')\n", message, register, m.Register[register])        
+    } else {
+        if m.Register[register].AsFloat() != wanted {
+            t.Errorf("failure dispatching '%v', (register %v has incorrect value '%v' wanted '%v')\n", message, register, test_value.AsInt(), wanted)            
+        }
+    }
+    
+    return
+}
 
 func TestDispatchInstructions(t *testing.T) {
     
@@ -69,6 +80,7 @@ func TestDispatchInstructions(t *testing.T) {
     s.WriteAluIns(SUB,3,4,6,false,0)
     s.WriteAluIns(MUL,3,4,7,false,0)
     s.WriteAluIns(DIV,3,4,8,false,0)
+    s.WriteAluIns(FDIV,3,4,10,false,0)
     s.WriteAluIns(MOD,3,7,9,false,0)
     
     // Test the Load
@@ -94,7 +106,11 @@ func TestDispatchInstructions(t *testing.T) {
     
     // Test div
     m.Dispatch(s)    
-    checkIntValueResult(t, m, 8, 1, "DIV r3, r4, r8")
+    checkFloatValueResult(t, m, 8, 1, "DIV r3, r4, r8")
+    
+    // Test fdiv
+    m.Dispatch(s)    
+    checkIntValueResult(t, m, 10, 1, "FDIV r3, r4, r10")
     
     // Test mod
     m.Dispatch(s)    

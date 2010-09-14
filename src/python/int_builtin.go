@@ -30,6 +30,11 @@ func (o *IntObject) AsInt() (int) {
     return o.Value
 }
 
+// Convert float to float (identity transform)
+func (o *IntObject) AsFloat() (float64) {
+    return float64(o.Value)
+}
+
 ///////// Rich Comparison Interface ///////////
 
 func (o *IntObject) Lt(r Object) (bool) {
@@ -80,6 +85,18 @@ func (o *IntObject) Mul(r Object) (Object) {
 }
 
 func (o *IntObject) Div(r Object) (Object) {
+    // Python says that the result of a '/' operation
+    // is always a FloatObject, irregardless of whether
+    // the input is an integer or float
+    result := new (FloatObject)
+    result.Value = float64(o.Value) / r.AsFloat()
+    
+    return result
+}
+
+func (o *IntObject) FloorDiv(r Object) (Object) {
+    // This is the // operation, which results in an 
+    // integer.
     result := new (IntObject)
     result.Value = o.Value / r.AsInt()
     
@@ -92,5 +109,6 @@ func (o *IntObject) Mod(r Object) (Object) {
     
     return result
 }
+
 
 

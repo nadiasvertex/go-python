@@ -55,6 +55,7 @@ const (
     SUB
     MUL
     DIV
+    FDIV
     MOD
 )
 
