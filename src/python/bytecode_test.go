@@ -21,12 +21,19 @@
 
 package python
 
-import "testing"
+import (
+        "testing"            
+        //"encoding/binary"
+)
 
-var sample_instructions = []int32{0x01020304, 0x05060708}
+var sample_instructions = []int32{0x0003a010, 0x05060708}
 
 func TestEncodeInstructions(t *testing.T) {
-
     
+    s := new (CodeStream)
+    s.Init()
+
+    s.WriteLoad("a", 3)
+    s.WriteBind("b", 5)    
   
 }

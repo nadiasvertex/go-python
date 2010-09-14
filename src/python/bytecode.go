@@ -69,6 +69,11 @@ type CodeStream struct {
     Globals         map[uint16]*Object        
 }
 
+func (s *CodeStream) Init() {
+    s.Buffer = new (bytes.Buffer)
+    s.Strings = make(map[string]uint16, 16)    
+}
+
 func (s *CodeStream) WriteLoad(name string, register uint32) {
     var instruction uint32
     var value uint16
