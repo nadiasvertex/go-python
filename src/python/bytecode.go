@@ -92,6 +92,14 @@ func (s *CodeStream) Name(name string) (uint16) {
     return value
 }
 
+// Updates the predicate field of any instruction
+func predicate(instruction uint32, pred_bit bool, pred_reg uint32) (uint32) {
+    if pred_bit {
+        instruction |= 1<<pred_execute_shift
+    }
+    return instruction | (pred_reg << pred_reg_shift)
+}
+
 // Bind a name to the local variable context.
 func (s *CodeStream) BindLocal(n string, o Object) {
     id := s.Name(n)
@@ -103,11 +111,8 @@ func (s *CodeStream) WriteLoad(name string, register uint32, pred_bit bool, pred
     
     value :=  s.Name(name)
     
-    instruction = LOAD | (pred_reg << pred_reg_shift) | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
-    if pred_bit {
-        instruction |= 1<<pred_execute_shift;
-    }
-    binary.Write(s, binary.LittleEndian, instruction)    
+    instruction = LOAD | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)    
+    binary.Write(s, binary.LittleEndian, predicate(instruction, pred_bit, pred_reg))    
 }
 
 func (s *CodeStream) WriteBind(name string, register uint32, pred_bit bool, pred_reg uint32) {
@@ -115,10 +120,13 @@ func (s *CodeStream) WriteBind(name string, register uint32, pred_bit bool, pred
     
     value :=  s.Name(name)
     
-    instruction = BIND | (pred_reg << pred_reg_shift) | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)
-    if pred_bit {
-        instruction |= 1<<pred_execute_shift;
-    }
-    binary.Write(s, binary.LittleEndian, instruction)    
+    instruction = BIND | (uint32(value) << immediate_val_shift) | (register << imm_target_reg_shift)    
+    binary.Write(s, binary.LittleEndian, predicate(instruction, pred_bit, pred_reg))    
 }
 
+func (s *CodeStream) WriteAdd(reg1, reg2, target_reg uint32, pred_bit bool, pred_reg uint32) {
+    var instruction uint32
+    
+    instruction = ADD | (reg1<<source_reg1_shift) | (reg2<<source_reg2_shift) | (target_reg<<target_reg_shift)    
+    binary.Write(s, binary.LittleEndian, predicate(instruction, pred_bit, pred_reg))    
+}

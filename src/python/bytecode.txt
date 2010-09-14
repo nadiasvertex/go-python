@@ -7,7 +7,7 @@ bits: 7 -11 : pred register (register 0 is always true, setting this to 0 makes 
 bits: 12-15 : identify register operand 1
 bits: 16-19 : identify register operand 2
 bits: 20-23 : identify target register
-bits: 23-31 : reserved
+bits: 24-31 : reserved
 
 Immediate Mode Instruction Encoding
 -----------------------------------

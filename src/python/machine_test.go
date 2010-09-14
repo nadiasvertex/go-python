@@ -27,7 +27,7 @@ import (
 
 func checkIntResult(t *testing.T, m *Machine, register int, wanted Object, message string) {
     if test_value, ok := m.Register[register].(*IntObject); !ok {
-        t.Errorf("failure dispatching '%v' (register %v has incorrect type: '%v')\n", message, register, m.Register[3])        
+        t.Errorf("failure dispatching '%v' (register %v has incorrect type: '%v')\n", message, register, m.Register[register])        
     } else {
         if m.Register[register] != wanted {
             t.Errorf("failure dispatching '%v', (register %v has incorrect value '%v')\n", message, register, test_value.AsInt())            
@@ -36,6 +36,19 @@ func checkIntResult(t *testing.T, m *Machine, register int, wanted Object, messa
     
     return
 }
+
+func checkIntValueResult(t *testing.T, m *Machine, register int, wanted int, message string) {
+    if test_value, ok := m.Register[register].(*IntObject); !ok {
+        t.Errorf("failure dispatching '%v' (register %v has incorrect type: '%v')\n", message, register, m.Register[register])        
+    } else {
+        if m.Register[register].AsInt() != wanted {
+            t.Errorf("failure dispatching '%v', (register %v has incorrect value '%v' wanted '%v')\n", message, register, test_value.AsInt(), wanted)            
+        }
+    }
+    
+    return
+}
+
 
 func TestDispatchInstructions(t *testing.T) {
     
@@ -46,12 +59,13 @@ func TestDispatchInstructions(t *testing.T) {
     
     io1 := new(IntObject)
     io1.Value = 10
-    
+            
     s.BindLocal("a", io1)    
 
     s.WriteLoad("a", 3, false, 0)
     s.WriteBind("b", 3, false, 0)
     s.WriteLoad("b", 4, false, 0)
+    s.WriteAdd(3,4,5,false,0)
     
     // Test the Load
     m.Dispatch(s)
@@ -62,7 +76,8 @@ func TestDispatchInstructions(t *testing.T) {
     m.Dispatch(s)
     checkIntResult(t, m, 4, io1, "LOAD 2, r4")
     
-    
-        
+    // Test add
+    m.Dispatch(s)    
+    checkIntValueResult(t, m, 5, 20, "ADD r3, r4, r5")           
     
 }

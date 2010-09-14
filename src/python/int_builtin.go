@@ -25,9 +25,12 @@ type IntObject struct {
     Value int 
 }
 
+// Convert int to int (identity transform)
 func (o *IntObject) AsInt() (int) {
     return o.Value
 }
+
+///////// Rich Comparison Interface ///////////
 
 func (o *IntObject) Lt(r Object) (bool) {
     return o.Value < r.AsInt()
@@ -52,3 +55,14 @@ func (o *IntObject) Lte(r Object) (bool) {
 func (o *IntObject) Gte(r Object) (bool) {
     return o.Value >= r.AsInt()
 }
+
+///////// Binary Arithmetic Interface ///////////
+
+func (o *IntObject) Add(r Object) (Object) {
+    result := new (IntObject)
+    result.Value = o.Value + r.AsInt()
+    
+    return result
+}
+
+

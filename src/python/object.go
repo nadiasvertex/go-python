@@ -45,6 +45,10 @@ type RichComparer interface {
     Gte(r Object) (bool)
 }
 
+type BinaryArithmetic interface {
+    Add(r Object) (Object)
+}
+
 type Converter interface {
     AsInt() (int)    
 }
@@ -54,6 +58,7 @@ type Object interface {
     Getter
     Setter
     RichComparer
+    BinaryArithmetic
     Converter
 }
 

@@ -26,7 +26,7 @@ import (
         "encoding/binary"
 )
 
-var sample_instructions = []uint32{0x00003010, 0x00015091}
+var sample_instructions = []uint32{0x00003010, 0x00015091, 0x00543026}
 
 func TestEncodeInstructions(t *testing.T) {
     
@@ -35,8 +35,9 @@ func TestEncodeInstructions(t *testing.T) {
 
     s.WriteLoad("a", 3, false, 0)
     s.WriteBind("b", 5, false, 1)
+    s.WriteAdd(3,4,5,false,0)
     
-    for i:=0; i<2; i++ {
+    for i:=0; i<3; i++ {
 	    var instruction uint32     
 	    binary.Read(s, binary.LittleEndian, &instruction)
 	    
