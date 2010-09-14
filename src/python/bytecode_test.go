@@ -23,10 +23,10 @@ package python
 
 import (
         "testing"            
-        //"encoding/binary"
+        "encoding/binary"
 )
 
-var sample_instructions = []int32{0x0003a010, 0x05060708}
+var sample_instructions = []uint32{0x00003010, 0x00015011}
 
 func TestEncodeInstructions(t *testing.T) {
     
@@ -34,6 +34,14 @@ func TestEncodeInstructions(t *testing.T) {
     s.Init()
 
     s.WriteLoad("a", 3)
-    s.WriteBind("b", 5)    
-  
+    s.WriteBind("b", 5)
+    
+    for i:=0; i<2; i++ {
+	    var instruction uint32     
+	    binary.Read(s, binary.LittleEndian, &instruction)
+	    
+	    if instruction!=sample_instructions[i] {
+	        t.Errorf("expected to read instruction '%v', got '%v'", sample_instructions[i], instruction)
+	    }
+	}
 }
