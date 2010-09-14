@@ -20,66 +20,75 @@
 
 package python
 
+import "big"
+
 type IntObject struct {
-    *ObjectData
-    Value int 
+    ObjectData
+    *big.Int 
+}
+
+func NewIntObject() (*IntObject) {
+    r := new (IntObject)
+    r.Int = big.NewInt(0)
+    
+    return r
 }
 
 // Convert int to int (identity transform)
-func (o *IntObject) AsInt() (int) {
-    return o.Value
+func (o *IntObject) AsInt() (*big.Int) {
+    return o.Int
 }
 
 // Convert float to float (identity transform)
 func (o *IntObject) AsFloat() (float64) {
-    return float64(o.Value)
+    return float64(o.Int64())
 }
 
 ///////// Rich Comparison Interface ///////////
 
 func (o *IntObject) Lt(r Object) (bool) {
-    return o.Value < r.AsInt()
+    return o.Cmp(r.AsInt()) == -1
 }
 
 func (o *IntObject) Gt(r Object) (bool) {
-    return o.Value > r.AsInt()
+    return o.Cmp(r.AsInt()) == 1
 }
 
 func (o *IntObject) Eq(r Object) (bool) {
-    return o.Value == r.AsInt()
+    return o.Cmp(r.AsInt()) == 0
 }
 
 func (o *IntObject) Neq(r Object) (bool) {
-    return o.Value != r.AsInt()
+    return o.Cmp(r.AsInt()) != 0
 }
 
 func (o *IntObject) Lte(r Object) (bool) {
-    return o.Value <= r.AsInt()
+    return o.Cmp(r.AsInt()) <= 0
 }
 
 func (o *IntObject) Gte(r Object) (bool) {
-    return o.Value >= r.AsInt()
+    return o.Cmp(r.AsInt()) >= 0
 }
 
 ///////// Binary Arithmetic Interface ///////////
 
 func (o *IntObject) Add(r Object) (Object) {
-    result := new (IntObject)
-    result.Value = o.Value + r.AsInt()
+    result := NewIntObject()
+    result.Int.Add(o.Int, r.AsInt())
     
     return result
 }
 
 func (o *IntObject) Sub(r Object) (Object) {
-    result := new (IntObject)
-    result.Value = o.Value - r.AsInt()
+    result := NewIntObject()
+    result.Int.Sub(o.Int, r.AsInt())
     
     return result
 }
 
 func (o *IntObject) Mul(r Object) (Object) {
-    result := new (IntObject)
-    result.Value = o.Value * r.AsInt()
+    result := NewIntObject()
+    result.Int.Mul(o.Int, r.AsInt())
     
     return result
 }
@@ -89,7 +98,7 @@ func (o *IntObject) Div(r Object) (Object) {
     // is always a FloatObject, irregardless of whether
     // the input is an integer or float
     result := new (FloatObject)
-    result.Value = float64(o.Value) / r.AsFloat()
+    result.Value = float64(o.Int.Int64()) / r.AsFloat()
     
     return result
 }
@@ -97,15 +106,15 @@ func (o *IntObject) Div(r Object) (Object) {
 func (o *IntObject) FloorDiv(r Object) (Object) {
     // This is the // operation, which results in an 
     // integer.
-    result := new (IntObject)
-    result.Value = o.Value / r.AsInt()
+    result := NewIntObject()    
+    result.Int.Div(o.Int, r.AsInt())
     
     return result
 }
 
 func (o *IntObject) Mod(r Object) (Object) {
-    result := new (IntObject)
-    result.Value = o.Value % r.AsInt()
+    result := NewIntObject()
+    result.Int.Mod(o.Int, r.AsInt())
     
     return result
 }

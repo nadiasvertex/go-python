@@ -20,6 +20,8 @@
 
 package python
 
+import "big"
+
 type ObjectData struct {
     Name string
     Attrs map[string]Object 
@@ -55,7 +57,7 @@ type BinaryArithmetic interface {
 }
 
 type Converter interface {
-    AsInt()     (int)
+    AsInt()     (*big.Int)
     AsFloat()   (float64)    
 }
 

@@ -22,6 +22,7 @@
 package python
 
 import (
+        "big"
         "testing"            
 )
 
@@ -37,11 +38,11 @@ func checkIntResult(t *testing.T, m *Machine, register int, wanted Object, messa
     return
 }
 
-func checkIntValueResult(t *testing.T, m *Machine, register int, wanted int, message string) {
+func checkIntValueResult(t *testing.T, m *Machine, register int, wanted *big.Int, message string) {
     if test_value, ok := m.Register[register].(*IntObject); !ok {
         t.Errorf("failure dispatching '%v' (register %v has incorrect type: '%v')\n", message, register, m.Register[register])        
     } else {
-        if m.Register[register].AsInt() != wanted {
+        if m.Register[register].AsInt().Cmp(wanted) != 0 {
             t.Errorf("failure dispatching '%v', (register %v has incorrect value '%v' wanted '%v')\n", message, register, test_value.AsInt(), wanted)            
         }
     }
@@ -69,7 +70,7 @@ func TestDispatchInstructions(t *testing.T) {
     m := new (Machine)
     
     io1 := new(IntObject)
-    io1.Value = 10
+    io1.Int = big.NewInt(10)
             
     s.BindLocal("a", io1)    
 
@@ -94,15 +95,15 @@ func TestDispatchInstructions(t *testing.T) {
     
     // Test add
     m.Dispatch(s)    
-    checkIntValueResult(t, m, 5, 20, "ADD r3, r4, r5")           
+    checkIntValueResult(t, m, 5, big.NewInt(20), "ADD r3, r4, r5")           
     
     // Test sub
     m.Dispatch(s)    
-    checkIntValueResult(t, m, 6, 0, "SUB r3, r4, r6")
+    checkIntValueResult(t, m, 6, big.NewInt(0), "SUB r3, r4, r6")
     
     // Test mul
     m.Dispatch(s)    
-    checkIntValueResult(t, m, 7, 100, "MUL r3, r4, r7")
+    checkIntValueResult(t, m, 7, big.NewInt(100), "MUL r3, r4, r7")
     
     // Test div
     m.Dispatch(s)    
@@ -110,10 +111,10 @@ func TestDispatchInstructions(t *testing.T) {
     
     // Test fdiv
     m.Dispatch(s)    
-    checkIntValueResult(t, m, 10, 1, "FDIV r3, r4, r10")
+    checkIntValueResult(t, m, 10, big.NewInt(1), "FDIV r3, r4, r10")
     
     // Test mod
     m.Dispatch(s)    
-    checkIntValueResult(t, m, 9, 10, "MOD r3, r7, r9")
+    checkIntValueResult(t, m, 9, big.NewInt(10), "MOD r3, r7, r9")
     
 }

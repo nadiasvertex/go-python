@@ -20,14 +20,16 @@
 
 package python
 
+import "big"
+
 type FloatObject struct {
-    *ObjectData
+    ObjectData
     Value float64 
 }
 
 // Convert float to int
-func (o *FloatObject) AsInt() (int) {
-    return int(o.Value)
+func (o *FloatObject) AsInt() (*big.Int) {
+    return big.NewInt(int64(o.Value))
 }
 
 // Convert float to float (identity transform)
@@ -95,7 +97,7 @@ func (o *FloatObject) FloorDiv(r Object) (Object) {
     // Python says that the result of floor division
     // is always an integer.
     result := new (IntObject)
-    result.Value = int(o.Value / r.AsFloat())
+    result.Int = big.NewInt(int64(o.Value / r.AsFloat()))
     
     return result
 }
