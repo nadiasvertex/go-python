@@ -20,7 +20,10 @@
 
 package python
 
-import "big"
+import (
+        "big"
+        "fmt"
+)
 
 type FloatObject struct {
     ObjectData
@@ -35,6 +38,11 @@ func (o *FloatObject) AsInt() (*big.Int) {
 // Convert float to float (identity transform)
 func (o *FloatObject) AsFloat() (float64) {
     return o.Value
+}
+
+// Convert float to string
+func (o *FloatObject) AsString() (string) {
+    return fmt.Sprint(o.Value)
 }
 
 ///////// Rich Comparison Interface ///////////

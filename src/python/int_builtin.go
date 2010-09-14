@@ -39,10 +39,16 @@ func (o *IntObject) AsInt() (*big.Int) {
     return o.Int
 }
 
-// Convert float to float (identity transform)
+// Convert int to float
 func (o *IntObject) AsFloat() (float64) {
     return float64(o.Int64())
 }
+
+// Convert int to string
+func (o *IntObject) AsString() (string) {
+    return o.String()
+}
+
 
 ///////// Rich Comparison Interface ///////////
 

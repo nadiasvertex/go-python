@@ -22,8 +22,7 @@ package python
 
 import "big"
 
-type ObjectData struct {
-    Name string
+type ObjectData struct {    
     Attrs map[string]Object 
 }
 
@@ -58,7 +57,8 @@ type BinaryArithmetic interface {
 
 type Converter interface {
     AsInt()     (*big.Int)
-    AsFloat()   (float64)    
+    AsFloat()   (float64)
+    AsString()  (string)    
 }
 
 // Object composite interface
@@ -68,6 +68,11 @@ type Object interface {
     RichComparer
     BinaryArithmetic
     Converter
+}
+
+func (o *ObjectData) Init() {
+    o.Attrs = make(map[string]Object, 16)
+    return  
 }
 
 // Get the value of an object's attribute.

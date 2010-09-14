@@ -6,7 +6,9 @@ GOFILES=\
 	bytecode.go\
 	machine.go\
 	object.go\
+	module_builtin.go\
 	int_builtin.go\
 	float_builtin.go\
+	string_builtin.go\
 		
 include $(GOROOT)/src/Make.pkg
