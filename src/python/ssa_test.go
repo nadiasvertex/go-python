@@ -20,7 +20,8 @@
 
 package python
 
-import (        
+import (   
+        "big"     
         "testing"            
 )
 
@@ -38,3 +39,22 @@ func TestWriteElements(t *testing.T) {
     }    
 }
 
+func TestLoadInt(t *testing.T) {    
+    ctx := new (SsaContext)
+    ctx.Init()
+        
+    for i:=0; i<256; i++ {
+        if ctx.LoadInt(big.NewInt(int64(i))) != i {
+            t.Errorf("NameInt returned an incorrect value as the new id.\n")  
+        }
+    }
+    
+    new_int := big.NewInt(1000)
+    new_int_idx := ctx.LoadInt(new_int)
+    
+    for i:=0; i<256; i++ {
+        if ctx.LoadInt(new_int) != new_int_idx {
+            t.Errorf("NameInt returned an incorrect value as the new id for an identical name.\n")  
+        }
+    }    
+}

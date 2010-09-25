@@ -21,7 +21,10 @@
 
 package python
 
-import "big"
+import (
+        "big"
+        "container/vector"
+)
 
 const (
     SSA_LOAD = iota
@@ -66,7 +69,7 @@ type SsaElement struct {
     Op          uint 
     
     // The two source operands
-    Src1, Src2  uint
+    Src1, Src2  int
     
     // The type of the source operands, one of SSA_TYPE_XXX
     Src1Type, Src2Type  uint 
@@ -76,6 +79,13 @@ type SsaElement struct {
     // since an SSA element will never be created without a write.
     WasRead, IsConst    bool 
     
+    // These indicate at what point this element becomes live (is first initialized)
+    // and when it dies (is never used again.)  These are important values to know
+    // so that we can maintain the active list during register allocation.  The value
+    // used is the index of the first SSA where this element is used, and the last index
+    // where this element is used.
+    LiveStart, LiveEnd  int
+    
     // The register allocated to this element. 0 means unallocated, since only 0 values can
     // be mapped to register 0.  
     Register    uint
@@ -84,10 +94,14 @@ type SsaElement struct {
 type SsaContext struct {
     LastElementId   int
     Elements        []*SsaElement
-    Ints            []*big.Int
-    Floats          []float64
-    Strings         []string
-    Names           []string
+    Ints            *vector.Vector
+    Floats          *vector.Vector
+    Strings         *vector.StringVector
+    Names           *vector.StringVector
+    
+    // The maps below are actually maps from
+    // the values to the SsaElements created
+    // to load them into an SSA "register".
     
     
     IntIdx          map[*big.Int]int
@@ -98,11 +112,10 @@ type SsaContext struct {
 
 func (ctx *SsaContext) Init() {
     ctx.Elements = make([]*SsaElement, 128, 128)
-    ctx.Ints     = make([]*big.Int, 16, 16)
-    ctx.Floats   = make([]float64, 16, 16)
-    ctx.Strings  = make([]string, 16, 16)
-    ctx.Names    = make([]string, 16, 16)
-    
+    ctx.Ints     = new(vector.Vector)
+    ctx.Floats   = new(vector.Vector)
+    ctx.Strings  = new(vector.StringVector)
+    ctx.Names    = new(vector.StringVector)    
      
     ctx.IntIdx      = make(map[*big.Int]int, 16)    
     ctx.FloatIdx    = make(map[float64]int, 16)    
@@ -110,7 +123,7 @@ func (ctx *SsaContext) Init() {
     ctx.NameIdx     = make(map[string]int, 16)
 }
 
-func (ctx *SsaContext) Write(el *SsaElement) int {
+func (ctx *SsaContext) Write(el *SsaElement) (el_id int) {
     // Grow the element slice if we are out of space
     if ctx.LastElementId >= len(ctx.Elements) {
         tmp := make([]*SsaElement, ctx.LastElementId + 128, ctx.LastElementId + 128)
@@ -122,10 +135,52 @@ func (ctx *SsaContext) Write(el *SsaElement) int {
         ctx.Elements = tmp
     }    
     
+    // Initialize the live ranges
+    el.LiveStart = ctx.LastElementId
+    el.LiveEnd = ctx.LastElementId 
+            
+    // Update the element(s) that this element references as having been read, and
+    // update their live range too.
+    if el.Op > SSA_STORE {
+        if el.Src1Type ==  SSA_TYPE_ELEMENT {
+            ctx.Elements[el.Src1].WasRead = true
+            ctx.Elements[el.Src1].LiveEnd = ctx.LastElementId
+        }
+        if el.Src2Type ==  SSA_TYPE_ELEMENT {
+            ctx.Elements[el.Src2].WasRead = true
+            ctx.Elements[el.Src2].LiveEnd = ctx.LastElementId
+        }
+    }
+    
     // Write a new element
+    el_id = ctx.LastElementId
     ctx.Elements[ctx.LastElementId] = el
     ctx.LastElementId++
     
-    return ctx.LastElementId-1
+    return
 }
 
+func (ctx *SsaContext) LoadInt(v *big.Int) int {
+    idx, present := ctx.IntIdx[v]
+    
+    if !present {
+        // Save the integer in the array so we know what the actual
+        // value should be        
+        idx = len(ctx.IntIdx)
+        ctx.Ints.Push(v)
+        
+        // Create a new SSA element to store the actual action of 
+        // loading a literal int
+        el := new (SsaElement)
+    
+	    el.Op       = SSA_LOAD
+	    el.Src1     = idx
+	    el.Src1Type = SSA_TYPE_INTEGER        
+    
+        // Map the new element to the value    
+        idx           = ctx.Write(el)
+        ctx.IntIdx[v] = idx      
+    }   
+    
+    return idx
+}

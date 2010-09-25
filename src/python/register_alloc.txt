@@ -63,3 +63,4 @@ d.1    |                                *
 
 In this case we have two long lived variables, whereas the rest have very short active lifetimes.  The allocator
 will tend to favor soonest needed rather than longest lived.  Whoever has the farthest active end will be spilled.
+
