@@ -160,6 +160,22 @@ func (ctx *SsaContext) Write(el *SsaElement) (el_id int) {
     return
 }
 
+func (ctx *SsaContext) Eval(op uint, src1, src2 int) int {
+
+    el := new (SsaElement)
+    
+    el.Op = op
+    el.Src1 = src1
+    el.Src2 = src2
+    
+    // All ALU/FPU operations' operands are elements.  Only
+    // LOAD/STORE deals with other types.
+    el.Src1Type = SSA_TYPE_ELEMENT
+    el.Src2Type = SSA_TYPE_ELEMENT
+    
+    return ctx.Write(el)
+}
+
 func (ctx *SsaContext) LoadInt(v *big.Int) int {
     idx, present := ctx.IntIdx[v]
     

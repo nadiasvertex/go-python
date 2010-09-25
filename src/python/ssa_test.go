@@ -58,3 +58,31 @@ func TestLoadInt(t *testing.T) {
         }
     }    
 }
+
+func TestEval(t *testing.T) {    
+    ctx := new (SsaContext)
+    ctx.Init()
+    
+    left_int  := big.NewInt(1000)
+    right_int := big.NewInt(500)
+       
+    // This tests that the live ranges of the elements are updated correctly. 
+    for i:=0; i<256; i++ {
+        left_int_id := ctx.LoadInt(left_int)
+        right_int_id := ctx.LoadInt(right_int)
+        
+        sum_el := ctx.Eval(SSA_ADD, left_int_id, right_int_id)
+        
+        if sum_el != i+2 {
+            t.Errorf("Id of sum element is wrong, got: %v wanted: %v", sum_el, i+2)
+        }
+        
+        if id:= ctx.Elements[left_int_id].LiveEnd; id != i+2 {
+            t.Errorf("Live range of left int is wrong, got: %v wanted: %v", id, i+2)
+        }
+        
+        if id:= ctx.Elements[right_int_id].LiveEnd; id != i+2 {
+            t.Errorf("Live range of right int is wrong, got: %v wanted: %v", id, i+2)
+        }        
+    }    
+}
