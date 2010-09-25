@@ -1,0 +1,59 @@
+Register Allocation
+-------------------
+
+The virtual CPU has a limited number of registers.  The limit is primarily to keep the size of the bytecode
+small.  (Of course, since this is a RISC machine, bytecode is kind of a misnomer.  Each instruction is
+32-bits wide.)
+
+Since we use SSA as the intermediate form (for optimization purposes), it makes sense to have a decent
+register allocator to map the infinite SSA registers into the much more limited vcpu registers.
+
+Consider the following code:
+
+Python:
+
+a = (5+10-22)*10
+b = a + (100-50)
+c = (a + b) * 200
+d = b + (c *25)
+
+SSA:
+
+tmp.1  = 5 
+tmp.2  = 10
+tmp.3  = tmp.1 + tmp.2
+tmp.4  = 22
+tmp.5  = tmp.3 - tmp.4
+tmp.6  = 10
+a.1    = tmp.5 * tmp.6
+tmp.7  = 100
+tmp.8  = 50
+tmp.9  = tmp.7 - tmp.8
+b.1    = a.1 + tmp.9
+tmp.10 = a.1 + b.1
+tmp.11 = 200
+c.1    = tmp.10 * tmp.11
+tmp.12 = 25
+tmp.13 = c.1 * tmp.12
+d.1    = b.1 + tmp.13
+
+---
+                          0 1 2 3 4 5 6 7
+        1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 
+tmp.1  |*---* 
+tmp.2  |  *-*
+tmp.3  |    *---*
+tmp.4  |      *-*
+tmp.5  |        *--*
+tmp.6  |         *-*
+tmp.7  |              *---* 
+tmp.8  |                *-*
+tmp.9  |                  *-*    
+tmp.10 |                    *-----*
+tmp.11 |                        *-*
+tmp.12 |                            *-*
+tmp.13 |                              *-*
+a.1    |             *---------*
+b.1    |                    *-----------*
+c.1    |                           *--*
+d.1    |                                *
