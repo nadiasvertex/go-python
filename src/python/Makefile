@@ -6,6 +6,7 @@ GOFILES=\
 	bytecode.go\
 	machine.go\
 	object.go\
+	ssa.go\
 	module_builtin.go\
 	int_builtin.go\
 	float_builtin.go\
