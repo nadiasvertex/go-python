@@ -265,3 +265,7 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) {
                     
     }    
 }
+
+func (ctx *SsaContext) Dump() {
+    
+}
