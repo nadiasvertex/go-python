@@ -86,3 +86,30 @@ func TestEval(t *testing.T) {
         }        
     }    
 }
+
+func TestRegisterAllocation(t *testing.T) {    
+    ctx := new (SsaContext)
+    ctx.Init()
+    
+    some_int  := big.NewInt(1000)
+    some_int_id := ctx.LoadInt(some_int)
+            
+    old_sum_el := 0
+       
+    // This creates a pathological chained expression that looks like: 1000 + 1000 + 1000 ... 256 times ... + 1000
+    // which requires the allocator to activate and deactivate elements constantly, while still keeping one very
+    // long lived element in a register. 
+    for i:=0; i<256; i++ {        
+        if old_sum_el == 0 {
+            old_sum_el = ctx.Eval(SSA_ADD, some_int_id, some_int_id)
+        } else {
+            old_sum_el = ctx.Eval(SSA_ADD, some_int_id, old_sum_el)
+        }       
+    }
+    
+    // Really stress the allocator by allowing only 4 registers.
+    // This seems to be the minimum necessary to solve this problem without
+    // spilling registers.
+    ctx.AllocateRegisters(4)  
+}
+

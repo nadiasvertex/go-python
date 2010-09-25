@@ -75,9 +75,11 @@ type SsaElement struct {
     Src1Type, Src2Type  uint 
     
     // Flags set if this element is ever read, and if it is known to be
-    // constant at compile time.  By definition an element is written to,
+    // constant at compile time.  By definition an element is always written to,
     // since an SSA element will never be created without a write.
-    WasRead, IsConst    bool 
+    // Pinned means that the instruction will always be emitted (never optimized
+    // away.)
+    WasRead, IsConst, Pinned    bool 
     
     // These indicate at what point this element becomes live (is first initialized)
     // and when it dies (is never used again.)  These are important values to know
@@ -88,7 +90,7 @@ type SsaElement struct {
     
     // The register allocated to this element. 0 means unallocated, since only 0 values can
     // be mapped to register 0.  
-    Register    uint
+    Register    int
 }
 
 type SsaContext struct {
@@ -199,4 +201,67 @@ func (ctx *SsaContext) LoadInt(v *big.Int) int {
     }   
     
     return idx
+}
+
+// Performs a linear-scan allocation of registers.  Only one pass is used to allocate registers to all
+// SSA instructions.
+func (ctx *SsaContext) AllocateRegisters(num_regs int) {
+
+    // The list of free regs is kept here
+    free_regs := new(vector.IntVector)
+    
+    // Push all the registers except 0 onto the free list. We assume the 0 register
+    // is reserved for the 0 value, thus it is never available.
+    for i:=1; i<num_regs; i++ {
+        free_regs.Push(i)
+    }
+    
+    // Store the active SSA elements in this list.
+    active_elements := new(vector.Vector)
+        
+    for ssa_id:=0; ssa_id < ctx.LastElementId; ssa_id++ {
+            
+        el := ctx.Elements[ssa_id]
+        
+        // First, check to see if this element is ever read.
+        if !el.Pinned && !el.WasRead {
+            // This element was never looked at, so we can
+            // skip it.
+            continue
+        }    
+    
+        ///////////////////
+    
+        new_active_elements := new (vector.Vector)    
+        
+        // First remove any elements whose LiveEnd value is less than the 
+        // current ssa_id index
+        for i:=0; i<active_elements.Len(); i++ {
+            
+            candidate_el := active_elements.At(i).(*SsaElement)
+             
+            if candidate_el.LiveEnd >= ssa_id {
+                new_active_elements.Push(candidate_el)
+            } else {
+                // Indicate that this register is free again
+                free_regs.Push(candidate_el.Register)
+            }
+        }  
+        
+        // Use the new list as our active elements list
+        active_elements = new_active_elements
+        
+        // Next push the current element into the active elements
+        active_elements.Push(el)
+     
+        // Figure out what register it should go into
+        if free_regs.Len() == 0 {
+            // Oh noes!! we are out of registers! we need to find a new free one.
+            panic("Ran out of registers!!")
+        } else {
+            el.Register = free_regs.Pop()
+        }
+        
+                    
+    }    
 }
