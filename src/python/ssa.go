@@ -132,6 +132,11 @@ type SsaContext struct {
     // How many slots are needed for some
     // code object in order to spill
     SpillRoomNeeded int
+    
+    // This is set when the live checks performed
+    // in Write should be turned off.  This is
+    // useful during register allocation and optimization.
+    DisableLiveCheck bool
 }
 
 func (ctx *SsaContext) Init() {
@@ -159,21 +164,23 @@ func (ctx *SsaContext) Write(el *SsaElement) (el_id int) {
         ctx.Elements = tmp
     }    
     
-    // Initialize the live ranges
-    el.LiveStart = ctx.LastElementId
-    el.LiveEnd = ctx.LastElementId 
-            
-    // Update the element(s) that this element references as having been read, and
-    // update their live range too.
-    if el.Op > SSA_ALU_MARK {
-        if el.Src1Type ==  SSA_TYPE_ELEMENT {
-            ctx.Elements[el.Src1].WasRead = true
-            ctx.Elements[el.Src1].LiveEnd = ctx.LastElementId
-        }
-        if el.Src2Type ==  SSA_TYPE_ELEMENT {
-            ctx.Elements[el.Src2].WasRead = true
-            ctx.Elements[el.Src2].LiveEnd = ctx.LastElementId
-        }
+    if !ctx.DisableLiveCheck {
+	    // Initialize the live ranges
+	    el.LiveStart = ctx.LastElementId
+	    el.LiveEnd = ctx.LastElementId
+                
+	    // Update the element(s) that this element references as having been read, and
+	    // update their live range too.
+	    if el.Op > SSA_ALU_MARK {
+	        if el.Src1Type ==  SSA_TYPE_ELEMENT {
+	            ctx.Elements[el.Src1].WasRead = true
+	            ctx.Elements[el.Src1].LiveEnd = ctx.LastElementId
+	        }
+	        if el.Src2Type ==  SSA_TYPE_ELEMENT {
+	            ctx.Elements[el.Src2].WasRead = true
+	            ctx.Elements[el.Src2].LiveEnd = ctx.LastElementId
+	        }
+	    }
     }
     
     // Write a new element
@@ -296,6 +303,8 @@ func (ctx *SsaContext) generateSpill(active_elements *vector.Vector,  spill_mag 
     // Remove it from the active list
     active_elements.Delete(spilled_el_index)
     
+    fmt.Printf("spilled: %v\n", spill_el.LiveStart)
+    
     // Return the newly freed register number
     return spill_el.Register
 }
@@ -309,10 +318,7 @@ func (ctx *SsaContext) generateFill(el *SsaElement, active_elements *vector.Vect
     // spilled to.
     free_slot := spill_mag.Map[el]
     spill_mag.Free.Push(free_slot)
-    
-    // Activate the element.
-    active_elements.Push(el)
-    
+        
     target_reg := 0
     
     // Find a free register (possibly by spilling another register.)
@@ -320,8 +326,16 @@ func (ctx *SsaContext) generateFill(el *SsaElement, active_elements *vector.Vect
         target_reg = ctx.generateSpill(active_elements, spill_mag)            
     } else {
         target_reg = free_regs.Pop()
-    }    
+    }
     
+    // Remove the element from the map
+    spill_mag.Map[el] = 0, false
+    
+    // Activate the element.
+    active_elements.Push(el)
+    
+    fmt.Printf("filled: %v\n", el.LiveStart)
+        
     // Write the fill instruction
     return ctx.Fill(free_slot, target_reg)    
 }
@@ -340,6 +354,7 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) *SsaContext  {
     
     new_ctx := new(SsaContext)
     new_ctx.Init()
+    new_ctx.DisableLiveCheck = true
     
     // Tracks old_ssa_id -> new_ssa_id values so
     // we can rename the parameters correctly during rewrite.
@@ -403,7 +418,7 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) *SsaContext  {
         // Next push the current element into the active elements
         // Use the "old_el" element because it will have the correct
         // live ranges.
-        active_elements.Push(old_el)
+        active_elements.Push(el)
         el.ActiveStart = ssa_id
      
         // Figure out what register it should go into

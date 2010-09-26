@@ -91,3 +91,20 @@ tmp.3 = tmp.1 - tmp.2
 We keep a dictionary of renames.  As we copy instructions from the old context to the new context, we consult the
 rename dictionary to see if anything needs to change.
 
+---
+
+We need to track the following pieces of information:
+
+1. cpu registers which are free
+2. ssa registers that are active
+3. ssa registers that have been spilled
+4. a map of spilled registers to spill slots
+
+For each ssa assignment we need to:
+
+1. find a free register
+2. spill an occupied register if there are no free registers
+3. fill one or two ssa registers if both one or both source ssa registers have been spilled
+4. spill an additional one or two registers depending on the fill requirements for the instruction
+
+ 
