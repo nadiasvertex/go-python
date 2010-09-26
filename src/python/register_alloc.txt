@@ -64,3 +64,30 @@ d.1    |                                *
 In this case we have two long lived variables, whereas the rest have very short active lifetimes.  The allocator
 will tend to favor soonest needed rather than longest lived.  Whoever has the farthest active end will be spilled.
 
+---
+
+SSA rewrite for dead code elimination
+
+tmp.1 = 5
+tmp.2 = 10
+tmp.3 = tmp.1 + tmp.2
+tmp.4 = a.1
+tmp.5 = tmp.3 - tmp.4
+
+becomes:
+
+tmp.1 = 5  // dead
+tmp.2 = 10 // dead
+tmp.3 = 15 // the add is processed by the compiler and the constant is emitted instead of an actual add op.
+tmp.4 = a.1
+tmp.5 = tmp.3 - tmp.4 // this non-constant expression still needs evaluation at run time
+
+then rewrite this during register allocation:
+
+tmp.1 = 15
+tmp.2 = a.1
+tmp.3 = tmp.1 - tmp.2
+
+We keep a dictionary of renames.  As we copy instructions from the old context to the new context, we consult the
+rename dictionary to see if anything needs to change.
+
