@@ -346,6 +346,7 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) {
         
     // The list of spilled elements is kept here
     spill_mag := new(SsaSpill)
+    spill_mag.Init()
     
     // Push all the registers except 0 onto the free list. We assume the 0 register
     // is reserved for the 0 value, thus it is never available.
