@@ -24,6 +24,7 @@ package python
 import (
         "big"
         "container/vector"
+        "fmt"
 )
 
 const (
@@ -32,6 +33,7 @@ const (
     SSA_FILL
     SSA_LOAD 
     SSA_STORE
+    SSA_ALU_MARK
     SSA_ADD
     SSA_SUB
     SSA_MUL
@@ -89,6 +91,8 @@ type SsaElement struct {
     // used is the index of the first SSA where this element is used, and the last index
     // where this element is used.
     LiveStart, LiveEnd  int
+    
+    ActiveStart, ActiveEnd int
     
     // The register allocated to this element. 0 means unallocated, since only 0 values can
     // be mapped to register 0.  
@@ -161,7 +165,7 @@ func (ctx *SsaContext) Write(el *SsaElement) (el_id int) {
             
     // Update the element(s) that this element references as having been read, and
     // update their live range too.
-    if el.Op > SSA_STORE {
+    if el.Op > SSA_ALU_MARK {
         if el.Src1Type ==  SSA_TYPE_ELEMENT {
             ctx.Elements[el.Src1].WasRead = true
             ctx.Elements[el.Src1].LiveEnd = ctx.LastElementId
@@ -325,7 +329,7 @@ func (ctx *SsaContext) generateFill(el *SsaElement, active_elements *vector.Vect
 
 // Performs a linear-scan allocation of registers.  Only one pass is used to allocate registers to all
 // SSA instructions.
-func (ctx *SsaContext) AllocateRegisters(num_regs int) {
+func (ctx *SsaContext) AllocateRegisters(num_regs int) *SsaContext  {
 
     // We create a new context so that we can rewrite the SSA stream into it.  This is because
     // we expect that we will need to spill at least one SSA into a temporary space.  A possible
@@ -357,17 +361,21 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) {
     // Store the active SSA elements in this list.
     active_elements := new(vector.Vector)
         
-    for ssa_id:=0; ssa_id < ctx.LastElementId; ssa_id++ {
-            
-        el := ctx.Elements[ssa_id]
+    for ssa_id:=0; ssa_id < ctx.LastElementId; ssa_id++ {            
+        old_el := ctx.Elements[ssa_id]
         
         // First, check to see if this element is ever read.
-        if !el.Pinned && !el.WasRead {
+        if !old_el.Pinned && !old_el.WasRead {
             // This element was never looked at, so we can
             // skip it.
             continue
         }    
-    
+        
+        // Create a new element to copy the
+        // old one into
+        el := new (SsaElement)
+        *el = *old_el
+        
         ///////////////////
     
         new_active_elements := new (vector.Vector)    
@@ -377,12 +385,15 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) {
         for i:=0; i<active_elements.Len(); i++ {
             
             candidate_el := active_elements.At(i).(*SsaElement)
+            
+            fmt.Printf("%v: live: %v,%v\n", ssa_id, candidate_el.LiveStart, candidate_el.LiveEnd)
              
             if candidate_el.LiveEnd >= ssa_id {
                 new_active_elements.Push(candidate_el)
             } else {
                 // Indicate that this register is free again
                 free_regs.Push(candidate_el.Register)
+                el.ActiveEnd = ssa_id
             }
         }  
         
@@ -390,7 +401,10 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) {
         active_elements = new_active_elements
         
         // Next push the current element into the active elements
-        active_elements.Push(el)
+        // Use the "old_el" element because it will have the correct
+        // live ranges.
+        active_elements.Push(old_el)
+        el.ActiveStart = ssa_id
      
         // Figure out what register it should go into
         if free_regs.Len() == 0 {
@@ -400,8 +414,8 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) {
         }        
         
         // Process any renames and fills
-        if el.Op > SSA_STORE {	        
-	        // Check for (and perfoem) any needed renames.
+        if el.Op > SSA_ALU_MARK {	        
+	        // Check for (and perform) any needed renames.
 	        if new_src1_name, present := rename_map[el.Src1]; present {
 	            el.Src1 = new_src1_name
 	        }
@@ -424,8 +438,14 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) {
                el.Src2 = new_ctx.generateFill(right_el, active_elements, spill_mag, free_regs)
             }
         }
+        
+        // Track the register in the new and old context.
+        old_el.Register=el.Register
                 
-        // Write the possibly renamed element into the new context
+        // Write the possibly renamed element into the new context                
         rename_map[ssa_id] = new_ctx.Write(el)                    
-    }    
+    }
+    
+    return new_ctx    
 }
+

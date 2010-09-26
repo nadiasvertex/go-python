@@ -21,7 +21,8 @@
 package python
 
 import (   
-        "big"     
+        "big"
+        "fmt"     
         "testing"            
 )
 
@@ -87,6 +88,29 @@ func TestEval(t *testing.T) {
     }    
 }
 
+func dumpElements(ctx *SsaContext) {
+    for i:=0; i<len(ctx.Elements); i++ {
+        el := ctx.Elements[i]
+            
+        if el!=nil {
+            switch el.Op {
+                case SSA_LOAD:
+                    fmt.Printf("r%v(r%v) = LOAD  %v ; live=%v,%v active: %v,%v\n", i, el.Register, el.Src1, el.LiveStart, el.LiveEnd, el.ActiveStart, el.ActiveEnd)
+                case SSA_STORE:
+                    fmt.Printf("r%v(r%v) = STORE %v\n", i, el.Register, el.Src1)
+                case SSA_SPILL:
+                    fmt.Printf("r%v = SPILL %v -> r%v\n", i, el.Src1, el.Register)
+                case SSA_FILL:
+                    fmt.Printf("r%v = FILL  %v <- r%v\n", i, el.Src1, el.Register)
+                default:    
+                    if el.Op > SSA_ALU_MARK {            
+                        fmt.Printf("r%v(r%v) = r%v(r%v) OP r%v(r%v) ; live=%v,%v active: %v,%v\n", i, el.Register, el.Src1, ctx.Elements[el.Src1].Register, el.Src2, ctx.Elements[el.Src2].Register, el.LiveStart, el.LiveEnd, el.ActiveStart, el.ActiveEnd)
+                    }
+            }
+       } 
+    }
+}
+
 func TestRegisterAllocation(t *testing.T) {    
     ctx := new (SsaContext)
     ctx.Init()
@@ -99,7 +123,7 @@ func TestRegisterAllocation(t *testing.T) {
     // This creates a pathological chained expression that looks like: 1000 + 1000 + 1000 ... 256 times ... + 1000
     // which requires the allocator to activate and deactivate elements constantly, while still keeping one very
     // long lived element in a register. 
-    for i:=0; i<256; i++ {        
+    for i:=0; i<16; i++ {        
         if old_sum_el == 0 {
             old_sum_el = ctx.Eval(SSA_ADD, some_int_id, some_int_id)
         } else {
@@ -110,6 +134,9 @@ func TestRegisterAllocation(t *testing.T) {
     // Really stress the allocator by allowing only 4 registers.
     // This seems to be the minimum necessary to solve this problem without
     // spilling registers.
-    ctx.AllocateRegisters(4)  
+    new_ctx := ctx.AllocateRegisters(3)
+    
+    dumpElements(ctx)
+    dumpElements(new_ctx)      
 }
 
