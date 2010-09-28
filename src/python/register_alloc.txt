@@ -107,4 +107,36 @@ For each ssa assignment we need to:
 3. fill one or two ssa registers if both one or both source ssa registers have been spilled
 4. spill an additional one or two registers depending on the fill requirements for the instruction
 
- 
+algorithm, step-by-step:
+
+1. push registers 1..n onto the free-regs stack
+2. begin the ssa loop
+3. choose the next ssa
+4. if it is unused, goto step 3
+5. examine the list of active elements, discarding elements no longer active (and freeing their CPU registers.)
+6. add the current ssa element to the list of active elements
+7. find a target register for the current ssa element
+8. if no target register is found, spill a register
+9. check to see if either source element in the current ssa element needs to be renamed (and rename if so.)
+10. fill src1 if necessary, possibly by spilling another cpu reg
+11. fill src2 if necessary, possibly by spilling another cpu reg 
+12. write out the new ssa element
+13. record the address of the new element compared with the old, so that elements depending on this one can be renamed
+14. goto step 3
+
+to spill a register:
+
+1. pick a free spill slot.
+2. if no slots are active, add a new slot.
+3. map the ssa element address to the spill slot
+4. emit a spill instruction
+
+to fill a register:
+
+1. find the spill slot given the ssa element using the map.
+2. find a free register.
+3. if no registers are free, perform the spill procedure
+4. delete the element from the spill map and give it's slot back to the spill list
+5. update the element's assigned register
+6. emit a fill instruction
+
