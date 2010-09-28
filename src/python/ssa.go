@@ -109,9 +109,14 @@ type SsaMapContext struct {
     // Storage for the free spill slots 
     FreeSpillSlots      *vector.IntVector
     
+    // At any given time, some elements
+    // must not be spilled because they
+    // are needed by the current instruction
+    NoSpillElements     map[int]bool
+    
     // Map of spill slots to SSA element
     SpillMap            map[int]int
-    
+        
     // Tracks old_ssa_id -> new_ssa_id values so
     // we can rename the parameters correctly during rewrite.
     RenameMap           map[int]int
@@ -121,14 +126,17 @@ type SsaMapContext struct {
         
     // Store the active SSA elements in this list.
     ActiveElements      *vector.Vector
+    
+    
 }
 
 
 func (s *SsaMapContext) Init() {
-    s.FreeSpillSlots = new (vector.IntVector)
+    s.FreeSpillSlots = new (vector.IntVector)    
     s.FreeRegs = new (vector.IntVector)
     s.ActiveElements = new (vector.Vector)
     
+    s.NoSpillElements = make(map[int]bool, 8)
     s.SpillMap = make(map[int]int, 8)
     s.RenameMap = make(map[int]int, 8)    
 }
@@ -291,6 +299,8 @@ func (ctx *SsaContext) generateSpill(mc *SsaMapContext) int {
     for i:=0; i<mc.ActiveElements.Len(); i++ {
        canditate_el := mc.ActiveElements.At(i).(*SsaElement)
        
+       if canidate_el.Address 
+       
        // If we don't have an element to spill yet, or if the current
        // element is a better candidate, choose it.
        if spill_el == nil || spill_el.LiveEnd < canditate_el.LiveEnd {
@@ -327,8 +337,12 @@ func (ctx *SsaContext) generateSpill(mc *SsaMapContext) int {
     
     fmt.Printf("spilled: %v\n", spill_el.Address)
     
+    // Save the assigned register, and then reset it    
+    reg := spill_el.Register
+    spill_el.Register = 0
+    
     // Return the newly freed register number
-    return spill_el.Register
+    return reg
 }
 
 // Generates a fill instruction.  Previously the value must have been spilled out to the save area.  An
@@ -350,6 +364,8 @@ func (ctx *SsaContext) generateFill(el *SsaElement, mc *SsaMapContext) int {
     } else {
         target_reg = mc.FreeRegs.Pop()
     }
+    
+    el.Register = target_reg
     
     // Remove the element from the map
     mc.SpillMap[el.Address] = 0, false
@@ -430,13 +446,6 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) *SsaContext  {
         
         // Update the active start address
         el.ActiveStart = ssa_id
-     
-        // Figure out what register it should go into
-        if mc.FreeRegs.Len() == 0 {
-            el.Register = new_ctx.generateSpill(mc)            
-        } else {
-            el.Register = mc.FreeRegs.Pop()
-        }        
         
         // Process any renames and fills
         if el.Op > SSA_ALU_MARK {	        
@@ -448,6 +457,9 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) *SsaContext  {
 	        if new_src2_name, present := mc.RenameMap[el.Src2]; present {
 	            el.Src2 = new_src2_name
 	        }
+	        
+	        mc.NoSpillElements[el.Src1] = true
+	        mc.NoSpillElements[el.Src2] = true	        
 	        
 	        // Check to see if we need to fill some registers from the
 	        // spill area in order to process this instruction.  If so, 
@@ -462,6 +474,13 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) *SsaContext  {
             }
         }
         
+        // Figure out what register this instruction should go into
+        if mc.FreeRegs.Len() == 0 {
+            el.Register = new_ctx.generateSpill(mc)            
+        } else {
+            el.Register = mc.FreeRegs.Pop()
+        }
+        
         // Track the register in the new and old context.
         old_el.Register=el.Register
                 
@@ -471,7 +490,10 @@ func (ctx *SsaContext) AllocateRegisters(num_regs int) *SsaContext  {
         // Push the current eement into the active elements list.
         // Do this here so that it does not get considered for 
         // spilling.
-        mc.ActiveElements.Push(el)                    
+        mc.ActiveElements.Push(el)                  
+        
+        // Clear out the no-spill list.
+        mc.NoSpillElements.Clear()  
     }
     
     return new_ctx    
