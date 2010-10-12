@@ -95,16 +95,16 @@ func dumpElements(ctx *SsaContext) {
         if el!=nil {
             switch el.Op {
                 case SSA_LOAD:
-                    fmt.Printf("r%v(r%v) = LOAD  %v ; live=%v,%v active: %v,%v\n", i, el.Register, el.Src1, el.LiveStart, el.LiveEnd, el.ActiveStart, el.ActiveEnd)
+                    fmt.Printf("r%v(r%v) = LOAD  %v ; live=%v,%v active: %v,%v\n", i, el.DstRegister, el.Src1, el.LiveStart, el.LiveEnd, el.ActiveStart, el.ActiveEnd)
                 case SSA_STORE:
-                    fmt.Printf("r%v(r%v) = STORE %v\n", i, el.Register, el.Src1)
+                    fmt.Printf("r%v(r%v) = STORE %v\n", i, el.DstRegister, el.Src1)
                 case SSA_SPILL:
-                    fmt.Printf("r%v = SPILL %v <- r%v\n", i, el.Src1, el.Register)
+                    fmt.Printf("r%v = SPILL %v <- r%v\n", i, el.Src1, el.DstRegister)
                 case SSA_FILL:
-                    fmt.Printf("r%v = FILL  %v -> r%v\n", i, el.Src1, el.Register)
+                    fmt.Printf("r%v = FILL  %v -> r%v\n", i, el.Src1, el.DstRegister)
                 default:    
                     if el.Op > SSA_ALU_MARK {            
-                        fmt.Printf("r%v(r%v) = r%v(r%v) OP r%v(r%v) ; live=%v,%v active: %v,%v\n", i, el.Register, el.Src1, ctx.Elements[el.Src1].Register, el.Src2, ctx.Elements[el.Src2].Register, el.LiveStart, el.LiveEnd, el.ActiveStart, el.ActiveEnd)
+                        fmt.Printf("r%v(r%v) = r%v(r%v) OP r%v(r%v) ; live=%v,%v active: %v,%v\n", i, el.DstRegister, el.Src1, el.Src1Register, el.Src2, el.Src2Register, el.LiveStart, el.LiveEnd, el.ActiveStart, el.ActiveEnd)
                     }
             }
        } 
