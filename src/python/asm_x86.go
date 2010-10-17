@@ -282,16 +282,75 @@ func (buf *X86Buffer) fmtExtGroupOp8(opcode TwoByteOpcodeId, groupOp GroupOpcode
 }
 
 func (buf *X86Buffer) putModRm(mode, reg, rm RegisterId) {
-    buf.WriteByte(uint8((int(mode) << 6) | ((int(reg) & 7) << 3) | (int(rm) & 7)))
+    buf.WriteByte(byte((int(mode) << 6) | ((int(reg) & 7) << 3) | (int(rm) & 7)))
 }
 
-func (buf *X86Buffer) putModRmSib(mode, reg, base, index RegisterId, scale int) {            
+func (buf *X86Buffer) putModRmSib(mode, reg, base, index RegisterId, scale int32) {            
     buf.putModRm(mode, reg, hasSib)
-    buf.WriteByte(uint8((int(scale) << 6) | ((int(index) & 7) << 3) | (int(base) & 7)))
+    buf.WriteByte(byte((int(scale) << 6) | ((int(index) & 7) << 3) | (int(base) & 7)))
 }
 
 func (buf *X86Buffer) registerModRM(reg, rm RegisterId) {
     buf.putModRm(ModRmRegister, reg, rm)
+}
+
+func (buf *X86Buffer) memoryModRM(reg, base RegisterId, offset int32) {
+    // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
+    if (buf.IsX64 && ((base == hasSib) || (base == hasSib2))) || (base == hasSib) { 
+        if (offset==0) { // No need to check if the base is noBase, since we know it is hasSib!
+            buf.putModRmSib(ModRmMemoryNoDisp, reg, base, noIndex, 0)
+        } else if (canSignExtend8to32(offset)) {
+            buf.putModRmSib(ModRmMemoryDisp8, reg, base, noIndex, 0)
+            buf.WriteByte(byte(offset))
+        } else {
+            buf.putModRmSib(ModRmMemoryDisp32, reg, base, noIndex, 0)
+            binary.Write(buf, binary.LittleEndian, offset)
+        }
+    } else {
+        if (buf.IsX64 && (offset!=0 && (base != noBase) && (base != noBase2))) || (offset!=0 && (base != noBase)) { 
+            buf.putModRm(ModRmMemoryNoDisp, reg, base)
+        } else if (canSignExtend8to32(offset)) {
+            buf.putModRm(ModRmMemoryDisp8, reg, base)
+            buf.WriteByte(byte(offset))
+        } else {
+            buf.putModRm(ModRmMemoryDisp32, reg, base)
+            binary.Write(buf, binary.LittleEndian, offset)
+        }        
+    }
+}
+
+func (buf *X86Buffer) memoryModRMOffset32(reg, base RegisterId, offset int32) {
+    // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
+    if (buf.IsX64 && (base == hasSib) || (base == hasSib2)) || (base == hasSib) {
+        buf.putModRmSib(ModRmMemoryDisp32, reg, base, noIndex, 0)
+        binary.Write(buf, binary.LittleEndian, offset)
+    } else {
+        buf.putModRm(ModRmMemoryDisp32, reg, base)
+        binary.Write(buf, binary.LittleEndian, offset)
+    }
+}
+
+func (buf *X86Buffer) memoryModRMOffsetScale32(reg, base, index RegisterId, scale, offset int32) {
+    if (buf.IsX64 && offset!=0 && (base != noBase) && (base != noBase2)) || (offset!=0 && (base != noBase)) {
+        buf.putModRmSib(ModRmMemoryNoDisp, reg, base, index, scale)
+    } else if (canSignExtend8to32(offset)) {
+        buf.putModRmSib(ModRmMemoryDisp8, reg, base, index, scale)
+        buf.WriteByte(byte(offset))
+    } else {
+        buf.putModRmSib(ModRmMemoryDisp32, reg, base, index, scale)
+        binary.Write(buf, binary.LittleEndian, offset)
+    }
+}
+
+func (buf *X86Buffer) memoryModRMAddress32(reg RegisterId, address int32) {
+    // noBase + ModRmMemoryNoDisp means noBase + ModRmMemoryDisp32!
+    buf.putModRm(ModRmMemoryNoDisp, reg, noBase)
+    binary.Write(buf, binary.LittleEndian, address)
+}
+
+// Check to see if we can extend the value 
+func canSignExtend8to32(value int32) bool {
+    return value == int32(int8(value))
 }
 
 // Immediates:
