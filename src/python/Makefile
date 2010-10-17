@@ -11,5 +11,6 @@ GOFILES=\
 	int_builtin.go\
 	float_builtin.go\
 	string_builtin.go\
+	asm_x86.go\
 		
 include $(GOROOT)/src/Make.pkg
